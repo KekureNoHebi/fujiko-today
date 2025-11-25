@@ -1,6 +1,7 @@
 import { getContent, fetchBuildId } from '@/lib/dora-world';
 import { BackButton } from '@/components/back-button';
 import ReactMarkdown from 'react-markdown';
+import { TermAnalyzer } from '@/components/term-analyzer';
 
 interface PageProps {
   params: Promise<{
@@ -22,6 +23,8 @@ export default async function ArticleDetailPage({ params }: PageProps) {
       <article className="prose dark:prose-invert max-w-none">
         <ReactMarkdown>{markdown}</ReactMarkdown>
       </article>
+
+      <TermAnalyzer content={markdown} />
     </div>
   );
 }
