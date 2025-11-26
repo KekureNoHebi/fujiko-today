@@ -46,13 +46,6 @@ export interface AnalysisResult {
   terms: Term[];
 }
 
-export interface DirectusTermsResponse {
-  characters: DirectusTerm[];
-  works: DirectusTerm[];
-  persons: DirectusTerm[];
-  pages: DirectusTerm[];
-}
-
 export interface TranslateRequest {
   text: string;
 }

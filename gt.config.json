@@ -1,4 +1,5 @@
 {
   "defaultLocale": "en",
-  "locales": ["zh-CN", "zh-TW", "zh-HK", "ja"]
+  "locales": ["zh-CN", "zh-TW", "zh-HK", "ja"],
+  "_versionId": "04a87d35b1a1999fedac3b9d881f1b535313ea3370d3a8b4406e31ab7dfe1e9b"
 }

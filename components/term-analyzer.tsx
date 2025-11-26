@@ -21,6 +21,24 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
 
+  const enrichTermsWithDirectus = (
+    terms: Term[],
+    directusData: Record<string, DirectusTerm[]>,
+  ) => {
+    const directusMap = new Map<string, DirectusTerm[]>();
+    Object.values(directusData)
+      .flat()
+      .forEach((term: DirectusTerm) => {
+        const existing = directusMap.get(term.name) || [];
+        directusMap.set(term.name, [...existing, term]);
+      });
+
+    return terms.map((term: Term) => ({
+      ...term,
+      directusMatches: directusMap.get(term.name) || [],
+    }));
+  };
+
   const analyzeContent = async () => {
     setLoading(true);
     setError(null);
@@ -32,23 +50,25 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
         getDirectusTerms(),
       ]);
 
-      const directusMap = new Map<string, DirectusTerm[]>();
-      Object.values(directusData)
-        .flat()
-        .forEach((term: DirectusTerm) => {
-          const existing = directusMap.get(term.name) || [];
-          directusMap.set(term.name, [...existing, term]);
-        });
+      const enrichedTerms = enrichTermsWithDirectus(
+        analysisData.terms,
+        directusData,
+      );
+      setResult({ terms: enrichedTerms });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      const enrichedTerms: Term[] = analysisData.terms.map((term: Term) => {
-        const directusMatches = directusMap.get(term.name) || [];
+  const refreshDirectusData = async () => {
+    if (!result) return;
 
-        return {
-          ...term,
-          directusMatches,
-        };
-      });
-
+    setLoading(true);
+    try {
+      const directusData = await getDirectusTerms();
+      const enrichedTerms = enrichTermsWithDirectus(result.terms, directusData);
       setResult({ terms: enrichedTerms });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -165,7 +185,7 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         term={selectedTerm}
-        onSuccess={analyzeContent}
+        onSuccess={refreshDirectusData}
       />
     </div>
   );
