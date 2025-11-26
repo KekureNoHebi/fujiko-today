@@ -17,24 +17,27 @@ export function ArticleCard({
   className,
 }: ArticleCardProps) {
   return (
-    <Link href={`/dora-world/contents/${id}`}>
+    <Link href={`/dora-world/contents/${id}`} className="group">
       <Card
         className={cn(
-          'overflow-hidden transition-colors hover:bg-accent',
+          'overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 pt-0',
           className,
         )}
       >
-        <div className="aspect-video relative overflow-hidden bg-muted">
+        <div className="aspect-143/93 relative overflow-hidden bg-muted">
           <Image
             src={imageUrl}
             alt={title}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
+          <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
-        <CardHeader>
-          <CardTitle className="line-clamp-2">{title}</CardTitle>
+        <CardHeader className="space-y-2">
+          <CardTitle className="line-clamp-2 text-lg leading-snug group-hover:text-primary transition-colors duration-200">
+            {title}
+          </CardTitle>
         </CardHeader>
       </Card>
     </Link>
