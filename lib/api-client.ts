@@ -12,3 +12,5 @@ const authMiddleware: Middleware = {
 
 const client = createClient<paths>({ baseUrl: process.env.DIRECTUS_URL });
 client.use(authMiddleware);
+
+export default client;

@@ -19,7 +19,7 @@ fi
 CURL_ARGS=(
   -sS
   -X GET
-  "$DIRECTUS_URL"
+  "$DIRECTUS_URL/server/specs/oas"
   -H "Content-Type: application/json"
 )
 

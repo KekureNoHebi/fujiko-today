@@ -4,41 +4,22 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2 } from 'lucide-react';
-
-interface Term {
-  name: string;
-  type: 'character' | 'person' | 'work' | 'other';
-}
-
-interface AnalysisResult {
-  terms: Term[];
-}
+import { Loader2, CheckCircle2, Circle } from 'lucide-react';
+import { TranslateTermsDialog } from '@/components/translate-terms-dialog';
+import type { Term, DirectusTerm, AnalysisResult } from '@/lib/types/term';
+import { typeColors, typeLabels } from '@/lib/constants/term';
+import { analyzeTerms, getDirectusTerms } from '@/lib/api/term-api';
 
 interface TermAnalyzerProps {
   content: string;
 }
 
-const typeColors = {
-  character: 'bg-blue-500',
-  person: 'bg-green-500',
-  work: 'bg-purple-500',
-  object: 'bg-yellow-500',
-  other: 'bg-gray-500',
-};
-
-const typeLabels = {
-  character: 'Character',
-  person: 'Person',
-  work: 'Work',
-  object: 'Object',
-  other: 'Other',
-};
-
 export function TermAnalyzer({ content }: TermAnalyzerProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
 
   const analyzeContent = async () => {
     setLoading(true);
@@ -46,26 +27,45 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
     setResult(null);
 
     try {
-      const response = await fetch('/api/analyze-terms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text: content }),
+      // Fetch both AI analysis and Directus terms in parallel
+      const [analysisData, directusData] = await Promise.all([
+        analyzeTerms({ text: content }),
+        getDirectusTerms(),
+      ]);
+
+      // Create a map of Directus terms for quick lookup (by name only)
+      const directusMap = new Map<string, DirectusTerm[]>();
+      [
+        ...directusData.characters,
+        ...directusData.works,
+        ...directusData.persons,
+        ...directusData.pages,
+      ].forEach((term: DirectusTerm) => {
+        const existing = directusMap.get(term.name) || [];
+        directusMap.set(term.name, [...existing, term]);
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to analyze content');
-      }
+      // Check each analyzed term against Directus data (match by name only)
+      const enrichedTerms: Term[] = analysisData.terms.map((term: Term) => {
+        const directusMatches = directusMap.get(term.name) || [];
 
-      const data = await response.json();
-      setResult(data);
+        return {
+          ...term,
+          directusMatches,
+        };
+      });
+
+      setResult({ terms: enrichedTerms });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTermClick = (term: Term) => {
+    setSelectedTerm(term);
+    setDialogOpen(true);
   };
 
   const groupedTerms = result?.terms.reduce(
@@ -105,8 +105,32 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
 
           {result && (
             <div className="mt-6 space-y-6">
-              <div className="text-sm text-muted-foreground">
-                Found {result.terms.length} terms
+              <div className="flex items-center justify-between text-sm">
+                <div className="text-muted-foreground">
+                  Found {result.terms.length} terms
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span className="text-muted-foreground">
+                      {
+                        result.terms.filter((t) => t.directusMatches?.length)
+                          .length
+                      }{' '}
+                      in Directus
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Circle className="h-4 w-4 text-gray-400" />
+                    <span className="text-muted-foreground">
+                      {
+                        result.terms.filter((t) => !t.directusMatches?.length)
+                          .length
+                      }{' '}
+                      new
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {groupedTerms &&
@@ -120,10 +144,18 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
                       {terms.map((term, index) => (
                         <Badge
                           key={`${term.name}-${index}`}
-                          className={
-                            typeColors[term.type as keyof typeof typeColors]
-                          }
+                          className={`${typeColors[term.type as keyof typeof typeColors]} flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity ${
+                            term.directusMatches?.length
+                              ? 'border-2 border-green-400'
+                              : 'opacity-60'
+                          }`}
+                          onClick={() => handleTermClick(term)}
                         >
+                          {term.directusMatches?.length ? (
+                            <CheckCircle2 className="h-3 w-3" />
+                          ) : (
+                            <Circle className="h-3 w-3" />
+                          )}
                           {term.name}
                         </Badge>
                       ))}
@@ -134,6 +166,12 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
           )}
         </CardContent>
       </Card>
+
+      <TranslateTermsDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        term={selectedTerm}
+      />
     </div>
   );
 }

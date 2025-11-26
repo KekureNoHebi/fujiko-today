@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
-import { TERM_TYPES } from '@/lib/types/term';
+import { LANGUAGE_CODES } from '@/lib/types/term';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,29 +29,14 @@ export async function POST(request: NextRequest) {
       responseMimeType: 'application/json',
       responseSchema: {
         type: Type.OBJECT,
-        required: ['terms'],
-        properties: {
-          terms: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              required: ['name', 'type'],
-              properties: {
-                name: {
-                  type: Type.STRING,
-                },
-                type: {
-                  type: Type.STRING,
-                  enum: TERM_TYPES,
-                },
-              },
-            },
-          },
-        },
+        required: [...LANGUAGE_CODES],
+        properties: Object.fromEntries(
+          LANGUAGE_CODES.map((code) => [code, { type: Type.STRING }]),
+        ),
       },
       systemInstruction: [
         {
-          text: `Identify all terms appearing in the text, including but not limited to names of characters, name of famous persons, names of works, names of places, and names of objects.`,
+          text: `Translate the Japanese text to multiple languages: English (en-US), Simplified Chinese (zh-CN), Traditional Chinese Taiwan (zh-TW), and Traditional Chinese Hong Kong (zh-HK). Return only the translations in the specified format.`,
         },
       ],
     };
@@ -68,23 +53,24 @@ export async function POST(request: NextRequest) {
       },
     ];
 
-    const response = await ai.models.generateContentStream({
+    const response = await ai.models.generateContent({
       model,
       config,
       contents,
     });
 
-    let fullText = '';
-    for await (const chunk of response) {
-      fullText += chunk.text || '';
+    const responseText = response.text;
+    if (!responseText) {
+      throw new Error('Empty response from AI');
     }
 
-    const result = JSON.parse(fullText);
+    const result = JSON.parse(responseText);
+
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error analyzing terms:', error);
+    console.error('Error translating text:', error);
     return NextResponse.json(
-      { error: 'Failed to analyze terms' },
+      { error: 'Failed to translate text' },
       { status: 500 },
     );
   }
