@@ -4,6 +4,8 @@ import type {
   TranslateRequest,
   Translations,
   DirectusTermsResponse,
+  CreateTermRequest,
+  CreateTermResponse,
 } from '@/lib/types/term';
 
 export async function analyzeTerms(
@@ -44,6 +46,23 @@ export async function getDirectusTerms(): Promise<DirectusTermsResponse> {
 
   if (!response.ok) {
     throw new Error('Failed to fetch Directus terms');
+  }
+
+  return response.json();
+}
+
+export async function saveTerm(
+  request: CreateTermRequest,
+): Promise<CreateTermResponse> {
+  const response = await fetch('/api/save-term', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to save term');
   }
 
   return response.json();

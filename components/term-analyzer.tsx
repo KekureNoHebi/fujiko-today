@@ -27,25 +27,19 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
     setResult(null);
 
     try {
-      // Fetch both AI analysis and Directus terms in parallel
       const [analysisData, directusData] = await Promise.all([
         analyzeTerms({ text: content }),
         getDirectusTerms(),
       ]);
 
-      // Create a map of Directus terms for quick lookup (by name only)
       const directusMap = new Map<string, DirectusTerm[]>();
-      [
-        ...directusData.characters,
-        ...directusData.works,
-        ...directusData.persons,
-        ...directusData.pages,
-      ].forEach((term: DirectusTerm) => {
-        const existing = directusMap.get(term.name) || [];
-        directusMap.set(term.name, [...existing, term]);
-      });
+      Object.values(directusData)
+        .flat()
+        .forEach((term: DirectusTerm) => {
+          const existing = directusMap.get(term.name) || [];
+          directusMap.set(term.name, [...existing, term]);
+        });
 
-      // Check each analyzed term against Directus data (match by name only)
       const enrichedTerms: Term[] = analysisData.terms.map((term: Term) => {
         const directusMatches = directusMap.get(term.name) || [];
 
@@ -171,6 +165,7 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         term={selectedTerm}
+        onSuccess={analyzeContent}
       />
     </div>
   );

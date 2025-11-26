@@ -1,4 +1,3 @@
-// 定义常量数组（单一数据源）
 export const TERM_TYPES = [
   'character',
   'person',
@@ -8,12 +7,26 @@ export const TERM_TYPES = [
   'other',
 ] as const;
 
-// 从常量派生类型
 export type TermType = (typeof TERM_TYPES)[number];
 
-export const LANGUAGE_CODES = ['en-US', 'zh-CN', 'zh-TW', 'zh-HK'] as const;
+export const LANGUAGE_CODES = [
+  'ja',
+  'en-US',
+  'zh-CN',
+  'zh-TW',
+  'zh-HK',
+] as const;
 
 export type LanguageCode = (typeof LANGUAGE_CODES)[number];
+
+export const SUPPORTED_TERM_TYPES = [
+  'character',
+  'person',
+  'work',
+  'page',
+] as const;
+
+export type SupportedTermType = (typeof SUPPORTED_TERM_TYPES)[number];
 
 export interface DirectusTerm {
   id: string;
@@ -46,4 +59,22 @@ export interface TranslateRequest {
 
 export interface AnalyzeRequest {
   text: string;
+}
+
+export interface TranslationFormData {
+  id: string;
+  type: SupportedTermType;
+  translations: Record<LanguageCode, string>;
+}
+
+export interface CreateTermRequest {
+  type: SupportedTermType;
+  formData: TranslationFormData;
+  existingId?: string;
+}
+
+export interface CreateTermResponse {
+  success: boolean;
+  itemId: string;
+  message?: string;
 }
