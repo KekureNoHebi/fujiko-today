@@ -3,7 +3,6 @@ import type {
   AnalysisResult,
   TranslateRequest,
   Translations,
-  DirectusTermsResponse,
   CreateTermRequest,
   CreateTermResponse,
 } from '@/lib/types/term';
@@ -41,7 +40,7 @@ export async function translateTerm(
   return response.json();
 }
 
-export async function getDirectusTerms(): Promise<DirectusTermsResponse> {
+export async function getDirectusTerms() {
   const response = await fetch('/api/directus-terms');
 
   if (!response.ok) {

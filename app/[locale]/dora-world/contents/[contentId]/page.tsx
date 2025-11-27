@@ -46,7 +46,7 @@ const markdownComponents: Components = {
           alt={alt || ''}
           width={800}
           height={450}
-          className="rounded-xl shadow-lg border border-border/50 w-full h-auto"
+          className="rounded-sm shadow-lg border border-border/50 w-full h-auto"
           unoptimized
         />
         {alt && (
@@ -116,6 +116,10 @@ interface PageProps {
     contentId: string;
   }>;
 }
+
+export const revalidate = 3600;
+
+export const dynamicParams = true;
 
 export default async function ArticleDetailPage({ params }: PageProps) {
   const { contentId } = await params;
