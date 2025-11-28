@@ -40,8 +40,13 @@ export async function translateTerm(
   return response.json();
 }
 
-export async function getDirectusTerms() {
-  const response = await fetch('/api/directus-terms');
+export async function getDirectusTerms(languageCode?: string) {
+  const url = new URL('/api/directus-terms', window.location.origin);
+  if (languageCode) {
+    url.searchParams.set('lang', languageCode);
+  }
+
+  const response = await fetch(url.toString());
 
   if (!response.ok) {
     throw new Error('Failed to fetch Directus terms');

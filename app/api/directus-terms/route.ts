@@ -15,9 +15,12 @@ const COLLECTION_CONFIG = {
   page: '/items/pages',
 } as const satisfies Record<SupportedTermType, string>;
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const fetchWithJapaneseTranslations = async (
+    const { searchParams } = new URL(request.url);
+    const languageCode = searchParams.get('lang') || 'ja';
+
+    const fetchWithTranslations = async (
       endpoint: (typeof COLLECTION_CONFIG)[SupportedTermType],
     ) => {
       return client.GET(endpoint, {
@@ -26,7 +29,7 @@ export async function GET() {
             fields: ['id', 'translations.*'],
             filter: JSON.stringify({
               translations: {
-                languages_code: { _eq: 'ja' },
+                languages_code: { _eq: languageCode },
               },
             }),
           },
@@ -53,7 +56,7 @@ export async function GET() {
             ): t is { languages_code?: string | null; name?: string | null } =>
               typeof t === 'object' && t !== null && 'languages_code' in t,
           )
-          .filter((t) => t.languages_code === 'ja')
+          .filter((t) => t.languages_code === languageCode)
           .map((t) => ({
             id: item.id,
             name: t.name || '',
@@ -66,14 +69,13 @@ export async function GET() {
     const responses = await Promise.all(
       Object.entries(COLLECTION_CONFIG).map(async ([type, endpoint]) => ({
         type: type as SupportedTermType,
-        response: await fetchWithJapaneseTranslations(endpoint),
+        response: await fetchWithTranslations(endpoint),
       })),
     );
 
     const result = responses.reduce(
       (acc, { type, response }) => {
-        const pluralKey = `${type}s`;
-        acc[pluralKey] = extractNames(response.data?.data, type);
+        acc[type] = extractNames(response.data?.data, type);
         return acc;
       },
       {} as Record<string, DirectusTerm[]>,

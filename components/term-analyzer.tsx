@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CheckCircle2, Circle } from 'lucide-react';
+import { Loader2, CheckCircle2, Circle, Copy, Check } from 'lucide-react';
 import { TranslateTermsDialog } from '@/components/translate-terms-dialog';
 import type { Term, DirectusTerm, AnalysisResult } from '@/lib/types/term';
 import { typeColors, typeLabels } from '@/lib/constants/term';
@@ -20,6 +20,8 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
+  const [processedContent, setProcessedContent] = useState<string>('');
+  const [copied, setCopied] = useState(false);
 
   const enrichTermsWithDirectus = (
     terms: Term[],
@@ -39,6 +41,36 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
     }));
   };
 
+  const replaceTermsWithPlaceholders = (
+    text: string,
+    terms: Term[],
+  ): string => {
+    let processedText = text;
+    const replacements: Array<{ term: string; placeholder: string }> = [];
+
+    terms.forEach((term) => {
+      if (term.directusMatches && term.directusMatches.length > 0) {
+        const directusTerm = term.directusMatches[0];
+        replacements.push({
+          term: term.name,
+          placeholder: `{{${directusTerm.type}.${directusTerm.id}}}`,
+        });
+      }
+    });
+
+    replacements.sort((a, b) => b.term.length - a.term.length);
+
+    replacements.forEach(({ term, placeholder }) => {
+      const regex = new RegExp(
+        term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+        'g',
+      );
+      processedText = processedText.replace(regex, placeholder);
+    });
+
+    return processedText;
+  };
+
   const analyzeContent = async () => {
     setLoading(true);
     setError(null);
@@ -55,6 +87,9 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
         directusData,
       );
       setResult({ terms: enrichedTerms });
+
+      const processed = replaceTermsWithPlaceholders(content, enrichedTerms);
+      setProcessedContent(processed);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -70,6 +105,9 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
       const directusData = await getDirectusTerms();
       const enrichedTerms = enrichTermsWithDirectus(result.terms, directusData);
       setResult({ terms: enrichedTerms });
+
+      const processed = replaceTermsWithPlaceholders(content, enrichedTerms);
+      setProcessedContent(processed);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -80,6 +118,16 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
   const handleTermClick = (term: Term) => {
     setSelectedTerm(term);
     setDialogOpen(true);
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(processedContent);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
 
   const groupedTerms = result?.terms.reduce(
@@ -180,6 +228,41 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
           )}
         </CardContent>
       </Card>
+
+      {processedContent && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Processed Content with Placeholders</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={copyToClipboard}
+                className="gap-2"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="p-4 bg-muted rounded-md">
+              <pre className="whitespace-pre-wrap font-mono text-sm">
+                {processedContent}
+              </pre>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <TranslateTermsDialog
         open={dialogOpen}

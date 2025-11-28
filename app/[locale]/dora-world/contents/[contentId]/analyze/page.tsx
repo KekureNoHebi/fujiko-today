@@ -5,6 +5,7 @@ import { markdownComponents } from '@/lib/markdown-components';
 import { TermAnalyzer } from '@/components/term-analyzer';
 import { LoginForm } from '@/components/login-form';
 import { checkAuth } from '@/lib/auth';
+import remarkBreaks from 'remark-breaks';
 
 interface PageProps {
   params: Promise<{
@@ -29,7 +30,10 @@ export default async function ArticleAnalyzePage({ params }: PageProps) {
         <BackButton />
 
         <article className="mt-8">
-          <ReactMarkdown components={markdownComponents}>
+          <ReactMarkdown
+            components={markdownComponents}
+            remarkPlugins={[remarkBreaks]}
+          >
             {markdown}
           </ReactMarkdown>
         </article>

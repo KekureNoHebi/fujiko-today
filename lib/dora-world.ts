@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import TurndownService from 'turndown';
+import type { DirectusTerm } from '@/lib/types/term';
 
 const BASE_URL = 'https://www.dora-world.com';
 const turndownService = new TurndownService();
@@ -105,6 +106,93 @@ export async function getContent({
   const markdown = turndownService.turndown($.html(main) || '');
 
   return markdown;
+}
+
+function mapLocaleToLanguageCode(locale: string): string {
+  const localeMap: Record<string, string> = {
+    en: 'en-US',
+    'zh-CN': 'zh-CN',
+    'zh-TW': 'zh-TW',
+    'zh-HK': 'zh-HK',
+    ja: 'ja',
+  };
+  return localeMap[locale] || 'ja';
+}
+
+async function fetchDirectusTerms(
+  languageCode: string,
+): Promise<Record<string, DirectusTerm[]>> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const url = new URL('/api/directus-terms', baseUrl);
+  url.searchParams.set('lang', languageCode);
+
+  const response = await fetch(url.toString(), {
+    next: {
+      revalidate: 3600,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch Directus terms');
+  }
+
+  return response.json();
+}
+
+function replacePlaceholders(
+  markdown: string,
+  termsData: Record<string, DirectusTerm[]>,
+): string {
+  let result = markdown;
+
+  for (const [type, terms] of Object.entries(termsData)) {
+    for (const term of terms) {
+      const placeholder = `{{${type}.${term.id}}}`;
+      const regex = new RegExp(escapeRegExp(placeholder), 'g');
+      result = result.replace(regex, term.name);
+    }
+  }
+
+  return result;
+}
+
+export async function getContentWithFallback({
+  nextBuildId,
+  contentId,
+  locale,
+}: {
+  nextBuildId: string;
+  contentId: number;
+  locale: string;
+}) {
+  const remoteUrl = `https://contents.starh.top/d/fujiko-today/dora-world/contents/${contentId}/${locale}/content.md`;
+
+  let markdown: string;
+
+  try {
+    const response = await fetch(remoteUrl, {
+      next: {
+        revalidate: 3600,
+      },
+    });
+
+    if (response.ok) {
+      markdown = await response.text();
+    } else {
+      markdown = await getContent({ nextBuildId, contentId });
+    }
+  } catch {
+    console.log(
+      `Failed to fetch from remote URL: ${remoteUrl}, falling back to getContent`,
+    );
+    markdown = await getContent({ nextBuildId, contentId });
+  }
+
+  const languageCode = mapLocaleToLanguageCode(locale);
+  const termsData = await fetchDirectusTerms(languageCode);
+  const processedMarkdown = replacePlaceholders(markdown, termsData);
+
+  return processedMarkdown;
 }
 
 export function replaceTermsInText(

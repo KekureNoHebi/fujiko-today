@@ -8,6 +8,7 @@ interface ArticleCardProps {
   title: string;
   imageUrl: string;
   className?: string;
+  isLoggedIn?: boolean;
 }
 
 export function ArticleCard({
@@ -15,9 +16,14 @@ export function ArticleCard({
   title,
   imageUrl,
   className,
+  isLoggedIn = false,
 }: ArticleCardProps) {
+  const href = isLoggedIn
+    ? `/dora-world/contents/${id}/analyze`
+    : `/dora-world/contents/${id}`;
+
   return (
-    <Link href={`/dora-world/contents/${id}/analyze`} className="group">
+    <Link href={href} className="group">
       <Card
         className={cn(
           'overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 pt-0',
@@ -29,8 +35,8 @@ export function ArticleCard({
             src={imageUrl}
             alt={title}
             fill
+            unoptimized
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
           <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>

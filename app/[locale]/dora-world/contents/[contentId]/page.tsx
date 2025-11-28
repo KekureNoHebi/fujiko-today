@@ -1,7 +1,8 @@
-import { getContent, fetchBuildId } from '@/lib/dora-world';
+import { getContentWithFallback, fetchBuildId } from '@/lib/dora-world';
 import { BackButton } from '@/components/back-button';
 import ReactMarkdown from 'react-markdown';
 import { markdownComponents } from '@/lib/markdown-components';
+import remarkBreaks from 'remark-breaks';
 
 interface PageProps {
   params: Promise<{
@@ -17,12 +18,13 @@ export async function generateStaticParams() {
 }
 
 export default async function ArticleDetailPage({ params }: PageProps) {
-  const { contentId } = await params;
+  const { contentId, locale } = await params;
 
   const nextBuildId = await fetchBuildId();
-  const markdown = await getContent({
+  const markdown = await getContentWithFallback({
     nextBuildId,
     contentId: Number(contentId),
+    locale,
   });
 
   return (
@@ -31,7 +33,10 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         <BackButton />
 
         <article className="mt-8">
-          <ReactMarkdown components={markdownComponents}>
+          <ReactMarkdown
+            components={markdownComponents}
+            remarkPlugins={[remarkBreaks]}
+          >
             {markdown}
           </ReactMarkdown>
         </article>

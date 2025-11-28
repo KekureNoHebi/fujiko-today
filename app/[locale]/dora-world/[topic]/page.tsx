@@ -1,6 +1,7 @@
 import { fetchBuildId, fetchContents } from '@/lib/dora-world';
 import { ArticleCard } from '@/components/article-card';
 import { T } from 'gt-next';
+import { checkAuth } from '@/lib/auth';
 
 interface PageProps {
   params: Promise<{
@@ -18,6 +19,7 @@ export default async function DoraWorldListPage({
 }: PageProps) {
   const { topic } = await params;
   const { t: topicId } = await searchParams;
+  const isLoggedIn = await checkAuth();
   const nextBuildId = await fetchBuildId();
   const response = await fetchContents({
     nextBuildId,
@@ -45,6 +47,7 @@ export default async function DoraWorldListPage({
               id={article.id}
               title={article.title}
               imageUrl={article.image_url}
+              isLoggedIn={isLoggedIn}
             />
           ))}
         </div>
