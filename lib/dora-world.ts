@@ -108,17 +108,6 @@ export async function getContent({
   return markdown;
 }
 
-function mapLocaleToLanguageCode(locale: string): string {
-  const localeMap: Record<string, string> = {
-    en: 'en-US',
-    'zh-CN': 'zh-CN',
-    'zh-TW': 'zh-TW',
-    'zh-HK': 'zh-HK',
-    ja: 'ja',
-  };
-  return localeMap[locale] || 'ja';
-}
-
 async function fetchDirectusTerms(
   languageCode: string,
 ): Promise<Record<string, DirectusTerm[]>> {
@@ -181,6 +170,8 @@ export async function getContentWithFallback({
     } else {
       markdown = await getContent({ nextBuildId, contentId });
     }
+    const termsData = await fetchDirectusTerms(locale);
+    markdown = replacePlaceholders(markdown, termsData);
   } catch {
     console.log(
       `Failed to fetch from remote URL: ${remoteUrl}, falling back to getContent`,
@@ -188,11 +179,7 @@ export async function getContentWithFallback({
     markdown = await getContent({ nextBuildId, contentId });
   }
 
-  const languageCode = mapLocaleToLanguageCode(locale);
-  const termsData = await fetchDirectusTerms(languageCode);
-  const processedMarkdown = replacePlaceholders(markdown, termsData);
-
-  return processedMarkdown;
+  return markdown;
 }
 
 export function replaceTermsInText(
