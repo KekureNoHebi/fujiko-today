@@ -17,7 +17,7 @@ export function ArticleCard({
   className,
 }: ArticleCardProps) {
   return (
-    <Link href={`/dora-world/contents/${id}`} className="group">
+    <Link href={`/dora-world/contents/${id}/analyze`} className="group">
       <Card
         className={cn(
           'overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 pt-0',

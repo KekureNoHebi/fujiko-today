@@ -2,6 +2,9 @@ import { getContent, fetchBuildId } from '@/lib/dora-world';
 import { BackButton } from '@/components/back-button';
 import ReactMarkdown from 'react-markdown';
 import { markdownComponents } from '@/lib/markdown-components';
+import { TermAnalyzer } from '@/components/term-analyzer';
+import { LoginForm } from '@/components/login-form';
+import { checkAuth } from '@/lib/auth';
 
 interface PageProps {
   params: Promise<{
@@ -10,14 +13,9 @@ interface PageProps {
   }>;
 }
 
-export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  return [];
-}
-
-export default async function ArticleDetailPage({ params }: PageProps) {
+export default async function ArticleAnalyzePage({ params }: PageProps) {
   const { contentId } = await params;
+  const isAuthenticated = await checkAuth();
 
   const nextBuildId = await fetchBuildId();
   const markdown = await getContent({
@@ -35,6 +33,14 @@ export default async function ArticleDetailPage({ params }: PageProps) {
             {markdown}
           </ReactMarkdown>
         </article>
+
+        <div className="mt-12 pt-8 border-t border-border">
+          {isAuthenticated ? (
+            <TermAnalyzer content={markdown} />
+          ) : (
+            <LoginForm />
+          )}
+        </div>
       </div>
     </div>
   );
