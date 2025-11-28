@@ -1,4 +1,3 @@
-import axios from 'axios';
 import * as cheerio from 'cheerio';
 import TurndownService from 'turndown';
 
@@ -48,7 +47,12 @@ interface ContentResponse {
 }
 
 export async function fetchBuildId(): Promise<string> {
-  const { data: html } = await axios.get(BASE_URL);
+  const response = await fetch(BASE_URL, {
+    next: {
+      revalidate: 3600,
+    },
+  });
+  const html = await response.text();
   const $ = cheerio.load(html);
   const nextDataScript = $('#__NEXT_DATA__').html();
   if (!nextDataScript) {
@@ -59,36 +63,39 @@ export async function fetchBuildId(): Promise<string> {
 }
 
 export async function fetchContents({
+  nextBuildId,
   topic,
   topicId,
 }: {
+  nextBuildId: string;
   topic: string;
   topicId?: string;
 }) {
   const topicIdParam = topicId ? `?t=${topicId}` : '';
-  const { data: html } = await axios.get(BASE_URL);
-
-  const $ = cheerio.load(html);
-
-  const nextDataScript = $('#__NEXT_DATA__').html();
-
-  if (!nextDataScript) {
-    return;
-  }
-
-  const nextData: NextData = JSON.parse(nextDataScript);
-  const nextBuildId = nextData.buildId;
-  const { data: response } = await axios.get<ContentsResponse>(
+  const dataResponse = await fetch(
     `${BASE_URL}/_next/data/${nextBuildId}/${topic}.json${topicIdParam}`,
+    {
+      next: {
+        revalidate: 3600,
+      },
+    },
   );
-  return response;
+  const data: ContentsResponse = await dataResponse.json();
+  return data;
 }
 
-export async function getContent(nextBuildId: string, contentId: number) {
-  const { data: response } = await axios.get<ContentResponse>(
+export async function getContent({
+  nextBuildId,
+  contentId,
+}: {
+  nextBuildId: string;
+  contentId: number;
+}) {
+  const response = await fetch(
     `${BASE_URL}/_next/data/${nextBuildId}/contents/${contentId}.json`,
   );
-  const content = response.pageProps.content;
+  const data: ContentResponse = await response.json();
+  const content = data.pageProps.content;
   const $ = cheerio.load(content.content || '');
   const main = $('.main_unit');
   main.find('.tag').remove();

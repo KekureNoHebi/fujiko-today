@@ -12,4 +12,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withGTConfig(nextConfig, {});
+export default withGTConfig(nextConfig, {
+  experimentalEnableSSG: true,
+});

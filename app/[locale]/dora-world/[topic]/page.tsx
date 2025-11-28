@@ -1,4 +1,4 @@
-import { fetchContents } from '@/lib/dora-world';
+import { fetchBuildId, fetchContents } from '@/lib/dora-world';
 import { ArticleCard } from '@/components/article-card';
 import { T } from 'gt-next';
 
@@ -12,18 +12,15 @@ interface PageProps {
   }>;
 }
 
-export const revalidate = 3600;
-
-export const dynamicParams = true;
-
 export default async function DoraWorldListPage({
   params,
   searchParams,
 }: PageProps) {
   const { topic } = await params;
   const { t: topicId } = await searchParams;
-
+  const nextBuildId = await fetchBuildId();
   const response = await fetchContents({
+    nextBuildId,
     topic,
     topicId,
   });
