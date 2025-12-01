@@ -5,6 +5,7 @@ import type {
   Translations,
   CreateTermRequest,
   CreateTermResponse,
+  DirectusTerm,
 } from '@/lib/types/term';
 
 export async function analyzeTerms(
@@ -40,7 +41,9 @@ export async function translateTerm(
   return response.json();
 }
 
-export async function getDirectusTerms(languageCode?: string) {
+export async function getDirectusTerms(
+  languageCode?: string,
+): Promise<Record<string, DirectusTerm[]>> {
   const url = new URL('/api/directus-terms', window.location.origin);
   if (languageCode) {
     url.searchParams.set('lang', languageCode);

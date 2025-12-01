@@ -9,6 +9,7 @@ import { TranslateTermsDialog } from '@/components/translate-terms-dialog';
 import type { Term, DirectusTerm, AnalysisResult } from '@/lib/types/term';
 import { typeColors, typeLabels } from '@/lib/constants/term';
 import { analyzeTerms, getDirectusTerms } from '@/lib/api/term-api';
+import { replaceTermsWithPlaceholders } from '@/lib/replace-terms';
 
 interface TermAnalyzerProps {
   content: string;
@@ -41,36 +42,6 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
     }));
   };
 
-  const replaceTermsWithPlaceholders = (
-    text: string,
-    terms: Term[],
-  ): string => {
-    let processedText = text;
-    const replacements: Array<{ term: string; placeholder: string }> = [];
-
-    terms.forEach((term) => {
-      if (term.directusMatches && term.directusMatches.length > 0) {
-        const directusTerm = term.directusMatches[0];
-        replacements.push({
-          term: term.name,
-          placeholder: `{{${directusTerm.type}.${directusTerm.id}}}`,
-        });
-      }
-    });
-
-    replacements.sort((a, b) => b.term.length - a.term.length);
-
-    replacements.forEach(({ term, placeholder }) => {
-      const regex = new RegExp(
-        term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-        'g',
-      );
-      processedText = processedText.replace(regex, placeholder);
-    });
-
-    return processedText;
-  };
-
   const analyzeContent = async () => {
     setLoading(true);
     setError(null);
@@ -88,7 +59,8 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
       );
       setResult({ terms: enrichedTerms });
 
-      const processed = replaceTermsWithPlaceholders(content, enrichedTerms);
+      const directusTerms = Object.values(directusData).flat();
+      const processed = replaceTermsWithPlaceholders(content, directusTerms);
       setProcessedContent(processed);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -106,7 +78,8 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
       const enrichedTerms = enrichTermsWithDirectus(result.terms, directusData);
       setResult({ terms: enrichedTerms });
 
-      const processed = replaceTermsWithPlaceholders(content, enrichedTerms);
+      const directusTerms = Object.values(directusData).flat();
+      const processed = replaceTermsWithPlaceholders(content, directusTerms);
       setProcessedContent(processed);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
