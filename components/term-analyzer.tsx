@@ -8,8 +8,11 @@ import { Loader2, CheckCircle2, Circle, Copy, Check } from 'lucide-react';
 import { TranslateTermsDialog } from '@/components/translate-terms-dialog';
 import type { Term, DirectusTerm, AnalysisResult } from '@/lib/types/term';
 import { typeColors, typeLabels } from '@/lib/constants/term';
-import { analyzeTerms, getDirectusTerms } from '@/lib/api/term-api';
-import { replaceTermsWithPlaceholders } from '@/lib/replace-terms';
+import { replaceTermsWithPlaceholders } from '@/lib/services/translation/replace-terms';
+import {
+  analyzeTermsAction,
+  getDirectusTermsAction,
+} from '@/lib/actions/term-actions';
 
 interface TermAnalyzerProps {
   content: string;
@@ -49,8 +52,8 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
 
     try {
       const [analysisData, directusData] = await Promise.all([
-        analyzeTerms({ text: content }),
-        getDirectusTerms(),
+        analyzeTermsAction({ text: content }),
+        getDirectusTermsAction(),
       ]);
 
       const enrichedTerms = enrichTermsWithDirectus(
@@ -74,7 +77,7 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
 
     setLoading(true);
     try {
-      const directusData = await getDirectusTerms();
+      const directusData = await getDirectusTermsAction();
       const enrichedTerms = enrichTermsWithDirectus(result.terms, directusData);
       setResult({ terms: enrichedTerms });
 

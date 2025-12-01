@@ -1,4 +1,7 @@
-import { getContentWithFallback, fetchBuildId } from '@/lib/dora-world';
+import {
+  getContentWithFallback,
+  fetchBuildId,
+} from '@/lib/services/dora-world';
 import { BackButton } from '@/components/back-button';
 import ReactMarkdown from 'react-markdown';
 import { markdownComponents } from '@/lib/markdown-components';

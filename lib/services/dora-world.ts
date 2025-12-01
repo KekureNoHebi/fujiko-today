@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import TurndownService from 'turndown';
 import type { DirectusTerm } from '@/lib/types/term';
-import { fetchDirectusTerms } from '@/lib/directus-terms';
+import { fetchDirectusTerms } from '@/lib/services/directus-terms';
 import { tasks } from '@trigger.dev/sdk/v3';
 import type { translateContentTask } from '@/trigger/translate-content';
 

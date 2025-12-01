@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
-import { fetchDirectusTerms } from '@/lib/directus-terms';
-import { replaceTermsWithPlaceholders } from '@/lib/replace-terms';
+import { fetchDirectusTerms } from '@/lib/services/directus-terms';
+import { replaceTermsWithPlaceholders } from '@/lib/services/translation/replace-terms';
 
 export interface TranslateContentInput {
   text: string;

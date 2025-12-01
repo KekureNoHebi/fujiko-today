@@ -1,4 +1,4 @@
-import { fetchBuildId, fetchContents } from '@/lib/dora-world';
+import { fetchBuildId, fetchContents } from '@/lib/services/dora-world';
 import { ArticleCard } from '@/components/article-card';
 import { T } from 'gt-next';
 import { checkAuth } from '@/lib/auth';

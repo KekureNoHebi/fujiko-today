@@ -27,9 +27,12 @@ import type {
 } from '@/lib/types/term';
 import { SUPPORTED_TERM_TYPES, LANGUAGE_CODES } from '@/lib/types/term';
 import { typeLabels, languageLabels } from '@/lib/constants/term';
-import { translateTerm, saveTerm } from '@/lib/api/term-api';
 import { generateSlug, validateSlug } from '@/lib/utils/slug';
 import { toast } from 'sonner';
+import {
+  saveTermAction,
+  translateTermAction,
+} from '@/lib/actions/term-actions';
 
 interface TranslateTermsDialogProps {
   open: boolean;
@@ -63,7 +66,7 @@ export function TranslateTermsDialog({
       setError(null);
 
       try {
-        const data = await translateTerm({ text: term.name });
+        const data = await translateTermAction({ text: term.name });
 
         const termType = term.directusMatches?.[0]?.type || term.type;
         const validType = SUPPORTED_TERM_TYPES.includes(
@@ -111,7 +114,7 @@ export function TranslateTermsDialog({
     setIsSubmitting(true);
 
     try {
-      await saveTerm({
+      await saveTermAction({
         type: formData.type,
         formData,
         existingId: term.directusMatches?.[0]?.id,

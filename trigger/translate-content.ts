@@ -1,6 +1,6 @@
 import { logger, schemaTask } from '@trigger.dev/sdk/v3';
 import { z } from 'zod';
-import { translateContent } from '@/lib/translate-content';
+import { translateContent } from '@/lib/services/translation/translate';
 
 export const translateContentTask = schemaTask({
   id: 'translate-content',

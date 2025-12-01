@@ -1,4 +1,4 @@
-import client from '@/lib/api-client';
+import client from '@/lib/api/client';
 import type { components } from '@/lib/api/v1';
 import type { DirectusTerm, SupportedTermType } from '@/lib/types/term';
 
