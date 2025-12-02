@@ -30,28 +30,32 @@ export default async function DoraWorldListPage({
   const articles = response?.pageProps.contents || [];
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-semibold mb-8 text-foreground">
-        <T>Articles</T>
-      </h1>
+    <div className="min-h-screen bg-linear-to-b from-background to-muted/20">
+      <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <header className="mb-10">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+            <T>Articles</T>
+          </h1>
+        </header>
 
-      {articles.length === 0 ? (
-        <p className="text-muted-foreground">
-          <T>No articles found</T>
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {articles.map((article) => (
-            <ArticleCard
-              key={article.id}
-              id={article.id}
-              title={article.title}
-              imageUrl={article.image_url}
-              isLoggedIn={isLoggedIn}
-            />
-          ))}
-        </div>
-      )}
+        {articles.length === 0 ? (
+          <p className="text-muted-foreground py-12">
+            <T>No articles found</T>
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
+            {articles.map((article) => (
+              <ArticleCard
+                key={article.id}
+                id={article.id}
+                title={article.title}
+                imageUrl={article.image_url}
+                isLoggedIn={isLoggedIn}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
