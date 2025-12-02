@@ -110,7 +110,7 @@ export async function getContent({
   return markdown;
 }
 
-function replacePlaceholders(
+export function replacePlaceholders(
   markdown: string,
   termsData: Record<string, DirectusTerm[]>,
 ): string {

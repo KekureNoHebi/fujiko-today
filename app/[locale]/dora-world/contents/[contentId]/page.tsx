@@ -3,9 +3,7 @@ import {
   fetchBuildId,
 } from '@/lib/services/dora-world';
 import { BackButton } from '@/components/back-button';
-import ReactMarkdown from 'react-markdown';
-import { markdownComponents } from '@/lib/markdown-components';
-import remarkBreaks from 'remark-breaks';
+import { ArticleContent } from '@/components/article-content';
 import { triggerContentTranslationAction } from '@/lib/actions/translate';
 import { after } from 'next/server';
 
@@ -42,18 +40,21 @@ export default async function ArticleDetailPage({ params }: PageProps) {
     });
   }
 
+  const needsTranslation =
+    !!translationRequests && translationRequests.length > 0;
+
   return (
     <div className="min-h-screen">
       <div className="container mx-auto py-8 px-4 max-w-2xl">
         <BackButton />
 
         <article className="mt-8">
-          <ReactMarkdown
-            components={markdownComponents}
-            remarkPlugins={[remarkBreaks]}
-          >
-            {markdown}
-          </ReactMarkdown>
+          <ArticleContent
+            contentId={contentId}
+            locale={locale}
+            initialMarkdown={markdown}
+            needsTranslation={needsTranslation}
+          />
         </article>
       </div>
     </div>
