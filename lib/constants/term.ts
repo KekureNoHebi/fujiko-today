@@ -20,8 +20,16 @@ export const typeLabels: Record<TermType, string> = {
 
 export const languageLabels: Record<LanguageCode, string> = {
   ja: '日本語',
-  'en-US': 'English',
+  en: 'English',
   'zh-CN': '简体中文',
   'zh-TW': '繁體中文（台灣）',
   'zh-HK': '繁體中文（香港）',
+} as const;
+
+export const languageNames: Record<LanguageCode, string> = {
+  ja: 'Japanese',
+  en: 'English',
+  'zh-CN': 'Simplified Chinese',
+  'zh-TW': 'Traditional Chinese (Taiwan)',
+  'zh-HK': 'Traditional Chinese (Hong Kong)',
 } as const;

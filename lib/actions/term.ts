@@ -7,13 +7,10 @@ import {
   SUPPORTED_TERM_TYPES,
 } from '@/lib/types/term';
 import type {
-  AnalyzeRequest,
   AnalysisResult,
-  TranslateRequest,
   Translations,
-  CreateTermRequest,
-  CreateTermResponse,
   SupportedTermType,
+  TranslationFormData,
 } from '@/lib/types/term';
 import client from '@/lib/api/client';
 import { validateSlug } from '@/lib/utils/slug';
@@ -82,9 +79,9 @@ async function callGeminiAPI<T>(
   }
 }
 
-export async function analyzeTermsAction(
-  request: AnalyzeRequest,
-): Promise<AnalysisResult> {
+export async function analyzeTermsAction(request: {
+  text: string;
+}): Promise<AnalysisResult> {
   try {
     const { text } = request;
 
@@ -131,9 +128,9 @@ export async function analyzeTermsAction(
   }
 }
 
-export async function translateTermAction(
-  request: TranslateRequest,
-): Promise<Translations> {
+export async function translateTermAction(request: {
+  text: string;
+}): Promise<Translations> {
   try {
     const { text } = request;
 
@@ -153,7 +150,7 @@ export async function translateTermAction(
         },
         systemInstruction: [
           {
-            text: `Translate the Japanese text to multiple languages: English (en-US), Simplified Chinese (zh-CN), Traditional Chinese Taiwan (zh-TW), and Traditional Chinese Hong Kong (zh-HK). Return only the translations in the specified format.`,
+            text: `Translate the Japanese text to multiple languages: English (en), Simplified Chinese (zh-CN), Traditional Chinese Taiwan (zh-TW), and Traditional Chinese Hong Kong (zh-HK). Return only the translations in the specified format.`,
           },
         ],
       },
@@ -174,9 +171,15 @@ const COLLECTION_CONFIG = {
 
 type CollectionType = keyof typeof COLLECTION_CONFIG;
 
-export async function saveTermAction(
-  request: CreateTermRequest,
-): Promise<CreateTermResponse> {
+export async function saveTermAction(request: {
+  type: SupportedTermType;
+  formData: TranslationFormData;
+  existingId?: string;
+}): Promise<{
+  success: boolean;
+  itemId: string;
+  message?: string;
+}> {
   try {
     const { type, formData, existingId } = request;
 

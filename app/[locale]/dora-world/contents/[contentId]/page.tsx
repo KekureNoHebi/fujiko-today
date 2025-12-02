@@ -6,6 +6,8 @@ import { BackButton } from '@/components/back-button';
 import ReactMarkdown from 'react-markdown';
 import { markdownComponents } from '@/lib/markdown-components';
 import remarkBreaks from 'remark-breaks';
+import { triggerContentTranslationAction } from '@/lib/actions/translate';
+import { after } from 'next/server';
 
 interface PageProps {
   params: Promise<{
@@ -24,11 +26,21 @@ export default async function ArticleDetailPage({ params }: PageProps) {
   const { contentId, locale } = await params;
 
   const nextBuildId = await fetchBuildId();
-  const markdown = await getContentWithFallback({
+  const { markdown, translationRequests } = await getContentWithFallback({
     nextBuildId,
     contentId: Number(contentId),
     locale,
   });
+
+  if (translationRequests) {
+    after(async () => {
+      await Promise.all(
+        translationRequests.map((translationRequest) =>
+          triggerContentTranslationAction(translationRequest),
+        ),
+      );
+    });
+  }
 
   return (
     <div className="min-h-screen">

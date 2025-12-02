@@ -9,10 +9,7 @@ import { TranslateTermsDialog } from '@/components/translate-terms-dialog';
 import type { Term, DirectusTerm, AnalysisResult } from '@/lib/types/term';
 import { typeColors, typeLabels } from '@/lib/constants/term';
 import { replaceTermsWithPlaceholders } from '@/lib/services/translation/replace-terms';
-import {
-  analyzeTermsAction,
-  getDirectusTermsAction,
-} from '@/lib/actions/term-actions';
+import { analyzeTermsAction, getDirectusTermsAction } from '@/lib/actions/term';
 
 interface TermAnalyzerProps {
   content: string;
@@ -31,17 +28,10 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
     terms: Term[],
     directusData: Record<string, DirectusTerm[]>,
   ) => {
-    const directusMap = new Map<string, DirectusTerm[]>();
-    Object.values(directusData)
-      .flat()
-      .forEach((term: DirectusTerm) => {
-        const existing = directusMap.get(term.name) || [];
-        directusMap.set(term.name, [...existing, term]);
-      });
-
+    const directusTerms = Object.values(directusData).flat();
     return terms.map((term: Term) => ({
       ...term,
-      directusMatches: directusMap.get(term.name) || [],
+      directusMatches: directusTerms.filter((t) => t.name === term.name),
     }));
   };
 

@@ -1,9 +1,8 @@
 import * as cheerio from 'cheerio';
 import TurndownService from 'turndown';
-import type { DirectusTerm } from '@/lib/types/term';
+import type { DirectusTerm, LanguageCode } from '@/lib/types/term';
 import { fetchDirectusTerms } from '@/lib/services/directus-terms';
-import { tasks } from '@trigger.dev/sdk/v3';
-import type { translateContentTask } from '@/trigger/translate-content';
+import { TriggerContentTranslationParams } from '@/lib/schemas/translate-content';
 
 const BASE_URL = 'https://www.dora-world.com';
 const turndownService = new TurndownService();
@@ -128,6 +127,10 @@ function replacePlaceholders(
   return result;
 }
 
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export async function getContentWithFallback({
   nextBuildId,
   contentId,
@@ -136,43 +139,73 @@ export async function getContentWithFallback({
   nextBuildId: string;
   contentId: number;
   locale: string;
-}) {
-  const remoteUrl = `${process.env.CONTENTS_URL}/d/fujiko-today/dora-world/contents/${contentId}/${locale}/content.md`;
+}): Promise<{
+  markdown: string;
+  translationRequests?: TriggerContentTranslationParams[];
+}> {
+  const basePath = `/fujiko-today/dora-world/contents/${contentId}`;
+  const remoteUrl = `${process.env.CONTENTS_URL}/d${basePath}/${locale}/content.md`;
+  const jaUrl = `${process.env.CONTENTS_URL}/d${basePath}/ja/content.md`;
 
   let markdown: string;
-
-  const targetLanguage = {
-    'en-US': 'English',
-    'zh-CN': 'Simplified Chinese',
-    'zh-TW': 'Traditional Chinese (Taiwan)',
-    'zh-HK': 'Traditional Chinese (Hong Kong)',
-  } as Record<string, string>;
+  const translationRequests: TriggerContentTranslationParams[] = [];
 
   try {
     const response = await fetch(remoteUrl);
 
     if (response.ok) {
       markdown = await response.text();
+      const termsData = await fetchDirectusTerms(locale);
+
+      markdown = replacePlaceholders(markdown, termsData);
     } else {
-      markdown = await getContent({ nextBuildId, contentId });
-      tasks.trigger<typeof translateContentTask>('translate-content', {
-        text: markdown,
-        targetLanguage: targetLanguage[locale],
-      });
+      const jaResponse = await fetch(jaUrl);
+      if (jaResponse.ok) {
+        markdown = await jaResponse.text();
+        const termsData = await fetchDirectusTerms('ja');
+        markdown = replacePlaceholders(markdown, termsData);
+        translationRequests.push({
+          text: markdown,
+          targetLanguage: locale as LanguageCode,
+          sourceLanguage: 'ja',
+          uploadPath: `${basePath}/${locale}/content.md`,
+          revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
+          idempotencyKey: `dora-world-${contentId}-${locale}`,
+          idempotencyKeyTTL: '60s',
+        });
+      } else {
+        throw new Error(
+          'Content not found in both target and Japanese locales',
+        );
+      }
     }
-    const termsData = await fetchDirectusTerms(locale);
-    markdown = replacePlaceholders(markdown, termsData);
   } catch {
     markdown = await getContent({ nextBuildId, contentId });
-    tasks.trigger<typeof translateContentTask>('translate-content', {
+    translationRequests.push({
       text: markdown,
-      targetLanguage: targetLanguage[locale],
+      targetLanguage: locale as LanguageCode,
+      sourceLanguage: 'ja',
+      uploadPath: `${basePath}/${locale}/content.md`,
+      revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
+      idempotencyKey: `dora-world-${contentId}-${locale}`,
+      idempotencyKeyTTL: '60s',
     });
+    if (locale !== 'ja') {
+      translationRequests.push({
+        text: markdown,
+        targetLanguage: 'ja',
+        sourceLanguage: 'ja',
+        uploadPath: `${basePath}/ja/content.md`,
+        revalidatePath: `/ja/dora-world/contents/${contentId}`,
+        idempotencyKey: `dora-world-${contentId}-ja`,
+        idempotencyKeyTTL: '60s',
+      });
+    }
   }
 
-  return markdown;
-}
-
-function escapeRegExp(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return {
+    markdown,
+    translationRequests:
+      translationRequests.length > 0 ? translationRequests : undefined,
+  };
 }

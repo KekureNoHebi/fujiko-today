@@ -9,13 +9,7 @@ export const TERM_TYPES = [
 
 export type TermType = (typeof TERM_TYPES)[number];
 
-export const LANGUAGE_CODES = [
-  'ja',
-  'en-US',
-  'zh-CN',
-  'zh-TW',
-  'zh-HK',
-] as const;
+export const LANGUAGE_CODES = ['ja', 'en', 'zh-CN', 'zh-TW', 'zh-HK'] as const;
 
 export type LanguageCode = (typeof LANGUAGE_CODES)[number];
 
@@ -46,28 +40,8 @@ export interface AnalysisResult {
   terms: Term[];
 }
 
-export interface TranslateRequest {
-  text: string;
-}
-
-export interface AnalyzeRequest {
-  text: string;
-}
-
 export interface TranslationFormData {
   id: string;
   type: SupportedTermType;
   translations: Record<LanguageCode, string>;
-}
-
-export interface CreateTermRequest {
-  type: SupportedTermType;
-  formData: TranslationFormData;
-  existingId?: string;
-}
-
-export interface CreateTermResponse {
-  success: boolean;
-  itemId: string;
-  message?: string;
 }

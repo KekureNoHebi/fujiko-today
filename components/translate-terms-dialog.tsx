@@ -29,10 +29,7 @@ import { SUPPORTED_TERM_TYPES, LANGUAGE_CODES } from '@/lib/types/term';
 import { typeLabels, languageLabels } from '@/lib/constants/term';
 import { generateSlug, validateSlug } from '@/lib/utils/slug';
 import { toast } from 'sonner';
-import {
-  saveTermAction,
-  translateTermAction,
-} from '@/lib/actions/term-actions';
+import { saveTermAction, translateTermAction } from '@/lib/actions/term';
 
 interface TranslateTermsDialogProps {
   open: boolean;
@@ -76,7 +73,7 @@ export function TranslateTermsDialog({
           : 'character';
 
         setFormData({
-          id: term.directusMatches?.[0]?.id || generateSlug(data['en-US']),
+          id: term.directusMatches?.[0]?.id || generateSlug(data['en']),
           type: validType,
           translations: Object.fromEntries(
             LANGUAGE_CODES.map((code) => [code, data[code]]),
