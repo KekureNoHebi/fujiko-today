@@ -10,51 +10,36 @@ import {
   createTurndownService,
 } from '@/lib/utils/content-helpers';
 
-const BASE_URL = 'https://www.dora-world.com';
+const BASE_URL = 'https://fujiko-museum.com';
+const API_URL = `${BASE_URL}/wp-json/wp/v2`;
 const turndownService = createTurndownService(BASE_URL);
 
-interface NextData {
-  buildId: string;
-}
-
-interface ContentsResponse {
-  pageProps: {
-    contents: Array<{
-      id: number;
-      page_url: string;
-      title: string;
-      image_url: string;
-    }>;
-    total_count: number;
+interface WordPressBlogPost {
+  id: number;
+  date: string;
+  modified: string;
+  link: string;
+  title: {
+    rendered: string;
+  };
+  content: {
+    rendered: string;
+    protected: boolean;
+  };
+  thumbnail?: {
+    url: string;
+    width: number;
+    height: number;
   };
 }
 
-interface ContentResponse {
-  pageProps: {
-    content: {
-      title: string;
-      content: string;
-    };
-  };
+interface WordPressPostsResponse {
+  posts: WordPressBlogPost[];
+  totalPosts: number;
+  totalPages: number;
 }
 
-export async function fetchBuildId(): Promise<string> {
-  const response = await fetch(BASE_URL, {
-    next: {
-      revalidate: 3600,
-    },
-  });
-  const html = await response.text();
-  const $ = cheerio.load(html);
-  const nextDataScript = $('#__NEXT_DATA__').html();
-  if (!nextDataScript) {
-    throw new Error('Build ID not found');
-  }
-  const nextData: NextData = JSON.parse(nextDataScript);
-  return nextData.buildId;
-}
-
-export async function fetchContentsFromDirectus({
+export async function fetchPostsFromDirectus({
   locale,
   page = 1,
   limit = 30,
@@ -65,10 +50,10 @@ export async function fetchContentsFromDirectus({
 }): Promise<PaginatedContentsResponse> {
   const offset = (page - 1) * limit;
 
-  const response = await client.GET('/items/dora_world_contents', {
+  const response = await client.GET('/items/fujiko_museum_contents', {
     params: {
       query: {
-        fields: ['id', 'page_url', 'image_url', 'translations.*'],
+        fields: ['id', 'link', 'thumbnail', 'translations.*'],
         limit,
         offset,
         meta: '*',
@@ -108,9 +93,9 @@ export async function fetchContentsFromDirectus({
 
     return {
       id: parseInt(item.id),
-      page_url: item.page_url || '',
+      page_url: item.link || '',
       title,
-      image_url: item.image_url || '',
+      image_url: item.thumbnail || '',
     };
   });
 
@@ -128,95 +113,94 @@ export async function fetchContentsFromDirectus({
   };
 }
 
-export async function fetchContents({
-  nextBuildId,
-  topic,
-  topicId,
+export async function fetchPosts({
   page = 1,
+  perPage = 30,
 }: {
-  nextBuildId: string;
-  topic: string;
-  topicId?: string;
   page?: number;
-}): Promise<PaginatedContentsResponse> {
-  const params = new URLSearchParams();
-  if (topicId) params.append('t', topicId);
-  if (page && page > 1) params.append('page', page.toString());
+  perPage?: number;
+}): Promise<WordPressPostsResponse> {
+  const url = `${API_URL}/blog?per_page=${perPage}&page=${page}`;
 
-  const queryString = params.toString();
-  const url = `${BASE_URL}/_next/data/${nextBuildId}/${topic}.json${queryString ? `?${queryString}` : ''}`;
-
-  const dataResponse = await fetch(url, {
+  const response = await fetch(url, {
     next: {
       revalidate: 60,
     },
   });
-  const data: ContentsResponse = await dataResponse.json();
 
-  const contents = data?.pageProps?.contents || [];
-  const total = data?.pageProps?.total_count || 0;
-  const totalPages = Math.ceil(total / 30);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch posts: ${response.statusText}`);
+  }
+
+  const posts: WordPressBlogPost[] = await response.json();
+  const totalPosts = parseInt(response.headers.get('x-wp-total') || '0', 10);
+  const totalPages = parseInt(
+    response.headers.get('x-wp-totalpages') || '1',
+    10,
+  );
+
+  return {
+    posts,
+    totalPosts,
+    totalPages,
+  };
+}
+
+export async function fetchPostsAsPaginatedContents({
+  page = 1,
+  perPage = 30,
+}: {
+  page?: number;
+  perPage?: number;
+}): Promise<PaginatedContentsResponse> {
+  const { posts, totalPosts, totalPages } = await fetchPosts({ page, perPage });
+
+  const contents = posts.map((post) => ({
+    id: post.id,
+    page_url: post.link,
+    title: post.title.rendered,
+    image_url: post.thumbnail?.url || '',
+  }));
 
   return {
     contents,
     meta: {
-      total,
+      total: totalPosts,
       page,
-      limit: 30,
+      limit: perPage,
       totalPages,
     },
   };
 }
 
-export async function getContent({
-  nextBuildId,
-  contentId,
-}: {
-  nextBuildId: string;
-  contentId: number;
-}) {
-  const response = await fetch(
-    `${BASE_URL}/_next/data/${nextBuildId}/contents/${contentId}.json`,
-  );
-  const data: ContentResponse = await response.json();
-  const content = data.pageProps.content;
-  const $ = cheerio.load(content.content || '');
-  const main = $('.main_unit');
-
-  const element = main.length > 0 ? main : $('body');
-
-  element.find('.tag').remove();
-  element.find('.sns_Area').remove();
-  element.find('div[style="display:none"]').remove();
-  element.find('ruby').remove();
-
-  element.find('img').each((_, img) => {
-    const src = $(img).attr('src');
-    if (src && !src.startsWith('http')) {
-      $(img).attr(
-        'src',
-        `https://contents.dora-world.com${src.startsWith('/') ? '' : '/'}${src}`,
-      );
-    }
+export async function getPost({ postId }: { postId: number }) {
+  const response = await fetch(`${API_URL}/blog/${postId}`, {
+    next: {
+      revalidate: 3600,
+    },
   });
 
-  const markdown = turndownService.turndown($.html(element) || '');
+  if (!response.ok) {
+    throw new Error(`Failed to fetch post: ${response.statusText}`);
+  }
+
+  const post: WordPressBlogPost = await response.json();
+  const $ = cheerio.load(post.content.rendered || '');
+  const markdown = turndownService.turndown($.html() || '');
   return markdown;
 }
 
-export async function getContentWithFallback({
-  nextBuildId,
-  contentId,
+export async function getPostWithFallback({
+  postId,
   locale,
 }: {
-  nextBuildId: string;
-  contentId: number;
+  postId: number;
   locale: string;
 }): Promise<{
   markdown: string;
   translationRequests?: TriggerContentTranslationParams[];
 }> {
-  const basePath = `/fujiko-today/dora-world/contents/${contentId}`;
+  const basePath = `/fujiko-today/fujiko-museum/blog/${postId}`;
   const remoteUrl = `${process.env.CONTENTS_URL}/d${basePath}/${locale}/content.md`;
   const jaUrl = `${process.env.CONTENTS_URL}/d${basePath}/ja/content.md`;
 
@@ -242,8 +226,8 @@ export async function getContentWithFallback({
           targetLanguage: locale as LanguageCode,
           sourceLanguage: 'ja',
           uploadPath: `${basePath}/${locale}/content.md`,
-          revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
-          idempotencyKey: `dora-world-${contentId}-${locale}`,
+          revalidatePath: `/${locale}/fujiko-museum/blog/${postId}`,
+          idempotencyKey: `fujiko-museum-${postId}-${locale}`,
           idempotencyKeyTTL: '60s',
         });
       } else {
@@ -253,14 +237,14 @@ export async function getContentWithFallback({
       }
     }
   } catch {
-    markdown = await getContent({ nextBuildId, contentId });
+    markdown = await getPost({ postId });
     translationRequests.push({
       text: markdown,
       targetLanguage: locale as LanguageCode,
       sourceLanguage: 'ja',
       uploadPath: `${basePath}/${locale}/content.md`,
-      revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
-      idempotencyKey: `dora-world-${contentId}-${locale}`,
+      revalidatePath: `/${locale}/fujiko-museum/blog/${postId}`,
+      idempotencyKey: `fujiko-museum-${postId}-${locale}`,
       idempotencyKeyTTL: '60s',
     });
     if (locale !== 'ja') {
@@ -269,8 +253,8 @@ export async function getContentWithFallback({
         targetLanguage: 'ja',
         sourceLanguage: 'ja',
         uploadPath: `${basePath}/ja/content.md`,
-        revalidatePath: `/ja/dora-world/contents/${contentId}`,
-        idempotencyKey: `dora-world-${contentId}-ja`,
+        revalidatePath: `/ja/fujiko-museum/blog/${postId}`,
+        idempotencyKey: `fujiko-museum-${postId}-ja`,
         idempotencyKeyTTL: '60s',
       });
     }

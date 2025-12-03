@@ -552,58 +552,6 @@ export interface paths {
     patch: operations['updateSingleItemsFujikoMuseumContents'];
     trace?: never;
   };
-  '/items/fujiko_museum_contents_translations': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Items
-     * @description List the fujiko_museum_contents_translations items.
-     */
-    get: operations['readItemsFujikoMuseumContentsTranslations'];
-    put?: never;
-    /**
-     * Create an Item
-     * @description Create a new fujiko_museum_contents_translations item.
-     */
-    post: operations['createItemsFujikoMuseumContentsTranslations'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update Multiple Items
-     * @description Update multiple fujiko_museum_contents_translations items at the same time.
-     */
-    patch: operations['updateItemsFujikoMuseumContentsTranslations'];
-    trace?: never;
-  };
-  '/items/fujiko_museum_contents_translations/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Retrieve an Item
-     * @description Retrieve a single fujiko_museum_contents_translations item by unique identifier.
-     */
-    get: operations['readSingleItemsFujikoMuseumContentsTranslations'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update an Item
-     * @description Update an existing fujiko_museum_contents_translations item.
-     */
-    patch: operations['updateSingleItemsFujikoMuseumContentsTranslations'];
-    trace?: never;
-  };
   '/items/works_translations': {
     parameters: {
       query?: never;
@@ -1018,6 +966,58 @@ export interface paths {
      * @description Update an existing characters_translations item.
      */
     patch: operations['updateSingleItemsCharactersTranslations'];
+    trace?: never;
+  };
+  '/items/fujiko_museum_contents_translations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Items
+     * @description List the fujiko_museum_contents_translations items.
+     */
+    get: operations['readItemsFujikoMuseumContentsTranslations'];
+    put?: never;
+    /**
+     * Create an Item
+     * @description Create a new fujiko_museum_contents_translations item.
+     */
+    post: operations['createItemsFujikoMuseumContentsTranslations'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update Multiple Items
+     * @description Update multiple fujiko_museum_contents_translations items at the same time.
+     */
+    patch: operations['updateItemsFujikoMuseumContentsTranslations'];
+    trace?: never;
+  };
+  '/items/fujiko_museum_contents_translations/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve an Item
+     * @description Retrieve a single fujiko_museum_contents_translations item by unique identifier.
+     */
+    get: operations['readSingleItemsFujikoMuseumContentsTranslations'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update an Item
+     * @description Update an existing fujiko_museum_contents_translations item.
+     */
+    patch: operations['updateSingleItemsFujikoMuseumContentsTranslations'];
     trace?: never;
   };
   '/items/pages': {
@@ -1509,20 +1509,13 @@ export interface components {
       date_created?: string | null;
       /** Format: timestamp */
       date_updated?: string | null;
+      link?: string | null;
+      thumbnail?: string | null;
       translations?:
         | (
             | number
             | components['schemas']['ItemsFujikoMuseumContentsTranslations']
           )[]
-        | null;
-    };
-    ItemsFujikoMuseumContentsTranslations: {
-      id?: number;
-      fujiko_museum_contents_id?:
-        | (string | components['schemas']['ItemsFujikoMuseumContents'])
-        | null;
-      languages_code?:
-        | (string | components['schemas']['ItemsLanguages'])
         | null;
     };
     ItemsWorksTranslations: {
@@ -1611,6 +1604,16 @@ export interface components {
         | (string | components['schemas']['ItemsLanguages'])
         | null;
       name?: string | null;
+    };
+    ItemsFujikoMuseumContentsTranslations: {
+      id?: number;
+      fujiko_museum_contents_id?:
+        | (string | components['schemas']['ItemsFujikoMuseumContents'])
+        | null;
+      languages_code?:
+        | (string | components['schemas']['ItemsLanguages'])
+        | null;
+      title?: string | null;
     };
     ItemsPages: {
       id: string;
@@ -2963,190 +2966,6 @@ export interface operations {
         content: {
           'application/json': {
             data?: components['schemas']['ItemsFujikoMuseumContents'];
-          };
-        };
-      };
-      401: components['responses']['UnauthorizedError'];
-      404: components['responses']['NotFoundError'];
-    };
-  };
-  readItemsFujikoMuseumContentsTranslations: {
-    parameters: {
-      query?: {
-        /** @description Control what fields are being returned in the object. */
-        fields?: components['parameters']['Fields'];
-        /** @description A limit on the number of objects that are returned. */
-        limit?: components['parameters']['Limit'];
-        /** @description What metadata to return in the response. */
-        meta?: components['parameters']['Meta'];
-        /** @description How many items to skip when fetching data. */
-        offset?: components['parameters']['Offset'];
-        /** @description How to sort the returned items. `sort` is a CSV of fields used to sort the fetched items. Sorting defaults to ascending (ASC) order but a minus sign (` - `) can be used to reverse this to descending (DESC) order. Fields are prioritized by their order in the CSV. You can also use a ` ? ` to sort randomly. */
-        sort?: components['parameters']['Sort'];
-        /** @description Select items in collection by given conditions. */
-        filter?: components['parameters']['Filter'];
-        /** @description Filter by items that contain the given search query in one of their fields. */
-        search?: components['parameters']['Search'];
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful request */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            data?: components['schemas']['ItemsFujikoMuseumContentsTranslations'][];
-            meta?: components['schemas']['x-metadata'];
-          };
-        };
-      };
-      401: components['responses']['UnauthorizedError'];
-    };
-  };
-  createItemsFujikoMuseumContentsTranslations: {
-    parameters: {
-      query?: {
-        /** @description What metadata to return in the response. */
-        meta?: components['parameters']['Meta'];
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        'application/json':
-          | components['schemas']['ItemsFujikoMuseumContentsTranslations'][]
-          | components['schemas']['ItemsFujikoMuseumContentsTranslations'];
-      };
-    };
-    responses: {
-      /** @description Successful request */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            data?: components['schemas']['ItemsFujikoMuseumContentsTranslations'][];
-          };
-        };
-      };
-      401: components['responses']['UnauthorizedError'];
-    };
-  };
-  updateItemsFujikoMuseumContentsTranslations: {
-    parameters: {
-      query?: {
-        /** @description Control what fields are being returned in the object. */
-        fields?: components['parameters']['Fields'];
-        /** @description A limit on the number of objects that are returned. */
-        limit?: components['parameters']['Limit'];
-        /** @description What metadata to return in the response. */
-        meta?: components['parameters']['Meta'];
-        /** @description How many items to skip when fetching data. */
-        offset?: components['parameters']['Offset'];
-        /** @description How to sort the returned items. `sort` is a CSV of fields used to sort the fetched items. Sorting defaults to ascending (ASC) order but a minus sign (` - `) can be used to reverse this to descending (DESC) order. Fields are prioritized by their order in the CSV. You can also use a ` ? ` to sort randomly. */
-        sort?: components['parameters']['Sort'];
-        /** @description Select items in collection by given conditions. */
-        filter?: components['parameters']['Filter'];
-        /** @description Filter by items that contain the given search query in one of their fields. */
-        search?: components['parameters']['Search'];
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        'application/json':
-          | components['schemas']['ItemsFujikoMuseumContentsTranslations'][]
-          | components['schemas']['ItemsFujikoMuseumContentsTranslations'];
-      };
-    };
-    responses: {
-      /** @description Successful request */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            data?: components['schemas']['ItemsFujikoMuseumContentsTranslations'][];
-          };
-        };
-      };
-    };
-  };
-  readSingleItemsFujikoMuseumContentsTranslations: {
-    parameters: {
-      query?: {
-        /** @description Control what fields are being returned in the object. */
-        fields?: components['parameters']['Fields'];
-        /** @description What metadata to return in the response. */
-        meta?: components['parameters']['Meta'];
-        /** @description Retrieve an item's state from a specific Content Version. The value corresponds to the "key" of the Content Version. */
-        version?: components['parameters']['Version'];
-      };
-      header?: never;
-      path: {
-        /** @description Index of the item. */
-        id: number | string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful request */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            data?: components['schemas']['ItemsFujikoMuseumContentsTranslations'];
-          };
-        };
-      };
-      401: components['responses']['UnauthorizedError'];
-      404: components['responses']['NotFoundError'];
-    };
-  };
-  updateSingleItemsFujikoMuseumContentsTranslations: {
-    parameters: {
-      query?: {
-        /** @description Control what fields are being returned in the object. */
-        fields?: components['parameters']['Fields'];
-        /** @description What metadata to return in the response. */
-        meta?: components['parameters']['Meta'];
-      };
-      header?: never;
-      path: {
-        /** @description Index of the item. */
-        id: number | string;
-      };
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        'application/json': components['schemas']['ItemsFujikoMuseumContentsTranslations'];
-      };
-    };
-    responses: {
-      /** @description Successful request */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            data?: components['schemas']['ItemsFujikoMuseumContentsTranslations'];
           };
         };
       };
@@ -4619,6 +4438,190 @@ export interface operations {
         content: {
           'application/json': {
             data?: components['schemas']['ItemsCharactersTranslations'];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+      404: components['responses']['NotFoundError'];
+    };
+  };
+  readItemsFujikoMuseumContentsTranslations: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description A limit on the number of objects that are returned. */
+        limit?: components['parameters']['Limit'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+        /** @description How many items to skip when fetching data. */
+        offset?: components['parameters']['Offset'];
+        /** @description How to sort the returned items. `sort` is a CSV of fields used to sort the fetched items. Sorting defaults to ascending (ASC) order but a minus sign (` - `) can be used to reverse this to descending (DESC) order. Fields are prioritized by their order in the CSV. You can also use a ` ? ` to sort randomly. */
+        sort?: components['parameters']['Sort'];
+        /** @description Select items in collection by given conditions. */
+        filter?: components['parameters']['Filter'];
+        /** @description Filter by items that contain the given search query in one of their fields. */
+        search?: components['parameters']['Search'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsFujikoMuseumContentsTranslations'][];
+            meta?: components['schemas']['x-metadata'];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+    };
+  };
+  createItemsFujikoMuseumContentsTranslations: {
+    parameters: {
+      query?: {
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json':
+          | components['schemas']['ItemsFujikoMuseumContentsTranslations'][]
+          | components['schemas']['ItemsFujikoMuseumContentsTranslations'];
+      };
+    };
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsFujikoMuseumContentsTranslations'][];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+    };
+  };
+  updateItemsFujikoMuseumContentsTranslations: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description A limit on the number of objects that are returned. */
+        limit?: components['parameters']['Limit'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+        /** @description How many items to skip when fetching data. */
+        offset?: components['parameters']['Offset'];
+        /** @description How to sort the returned items. `sort` is a CSV of fields used to sort the fetched items. Sorting defaults to ascending (ASC) order but a minus sign (` - `) can be used to reverse this to descending (DESC) order. Fields are prioritized by their order in the CSV. You can also use a ` ? ` to sort randomly. */
+        sort?: components['parameters']['Sort'];
+        /** @description Select items in collection by given conditions. */
+        filter?: components['parameters']['Filter'];
+        /** @description Filter by items that contain the given search query in one of their fields. */
+        search?: components['parameters']['Search'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json':
+          | components['schemas']['ItemsFujikoMuseumContentsTranslations'][]
+          | components['schemas']['ItemsFujikoMuseumContentsTranslations'];
+      };
+    };
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsFujikoMuseumContentsTranslations'][];
+          };
+        };
+      };
+    };
+  };
+  readSingleItemsFujikoMuseumContentsTranslations: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+        /** @description Retrieve an item's state from a specific Content Version. The value corresponds to the "key" of the Content Version. */
+        version?: components['parameters']['Version'];
+      };
+      header?: never;
+      path: {
+        /** @description Index of the item. */
+        id: number | string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsFujikoMuseumContentsTranslations'];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+      404: components['responses']['NotFoundError'];
+    };
+  };
+  updateSingleItemsFujikoMuseumContentsTranslations: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+      };
+      header?: never;
+      path: {
+        /** @description Index of the item. */
+        id: number | string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['ItemsFujikoMuseumContentsTranslations'];
+      };
+    };
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsFujikoMuseumContentsTranslations'];
           };
         };
       };

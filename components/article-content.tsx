@@ -7,28 +7,24 @@ import { markdownComponents } from '@/lib/markdown-components';
 import remarkBreaks from 'remark-breaks';
 
 interface ArticleContentProps {
-  contentId: string;
   locale: string;
   initialMarkdown: string;
-  needsTranslation: boolean;
+  apiUrl?: string;
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function ArticleContent({
-  contentId,
   locale,
   initialMarkdown,
-  needsTranslation,
+  apiUrl,
 }: ArticleContentProps) {
   const [animateTransition, setAnimateTransition] = useState<boolean | null>(
     null,
   );
 
   const { data } = useSWR<{ exists: boolean; markdown?: string }>(
-    needsTranslation
-      ? `/api/dora-world/contents/${contentId}?locale=${locale}`
-      : null,
+    apiUrl ? `${apiUrl}?locale=${locale}` : null,
     fetcher,
     {
       refreshInterval: (latestData) => (latestData?.exists ? 0 : 30000),
@@ -46,7 +42,7 @@ export function ArticleContent({
 
   return (
     <div className="relative">
-      {needsTranslation && !isTranslationComplete && (
+      {apiUrl && !isTranslationComplete && (
         <div className="mb-4 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
           <svg
             className="h-4 w-4 animate-spin"

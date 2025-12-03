@@ -4,51 +4,40 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { T } from 'gt-next';
+import { getNavStorageKey } from '@/lib/utils/navigation-storage';
 
 interface BackToListProps {
   locale: string;
-  fallbackPath?: string;
+  basePath: string;
 }
 
-interface NavigationState {
-  topic: string;
-  topicId?: string;
-  page: number;
-}
+type NavigationState = Record<string, string | number>;
 
-export function BackToList({
-  locale,
-  fallbackPath = '/dora-world/contents',
-}: BackToListProps) {
-  // Lazy initialization: only runs once on client mount
+export function BackToList({ locale, basePath }: BackToListProps) {
   const [backUrl] = useState(() => {
-    // Server-side or initial render
     if (typeof window === 'undefined') {
-      return `/${locale}${fallbackPath}`;
+      return `/${locale}/${basePath}`;
     }
 
     try {
-      const saved = sessionStorage.getItem('dora_nav_state');
+      const storageKey = getNavStorageKey(basePath);
+      const saved = sessionStorage.getItem(storageKey);
       if (!saved) {
-        return `/${locale}${fallbackPath}`;
+        return `/${locale}/${basePath}`;
       }
 
       const state: NavigationState = JSON.parse(saved);
-      const { topic, topicId, page } = state;
       const params = new URLSearchParams();
 
-      if (topicId) {
-        params.set('t', topicId);
-      }
-
-      if (page > 1) {
-        params.set('page', page.toString());
+      // Build query params from state
+      for (const [key, value] of Object.entries(state)) {
+        params.set(key, value.toString());
       }
 
       const query = params.toString();
-      return `/${locale}/dora-world/${topic}${query ? `?${query}` : ''}`;
+      return `/${locale}/${basePath}${query ? `?${query}` : ''}`;
     } catch {
-      return `/${locale}${fallbackPath}`;
+      return `/${locale}/${basePath}`;
     }
   });
 

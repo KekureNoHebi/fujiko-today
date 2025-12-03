@@ -12,6 +12,12 @@ export default function Home() {
         >
           ドラえもんチャンネル
         </Link>
+        <Link
+          className="flex h-12 items-center justify-center rounded-full bg-foreground px-8 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+          href="/fujiko-museum/blog"
+        >
+          川崎市 藤子・F・不二雄ミュージアム
+        </Link>
       </main>
     </div>
   );

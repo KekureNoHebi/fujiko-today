@@ -1,66 +1,45 @@
-import {
-  fetchBuildId,
-  fetchContents,
-  fetchContentsFromDirectus,
-} from '@/lib/services/dora-world';
+import { fetchPostsFromDirectus } from '@/lib/services/fujiko-museum';
 import { ArticleCard } from '@/components/article-card';
 import { Pagination } from '@/components/pagination';
 import { T } from 'gt-next';
 import { checkAuth } from '@/lib/auth';
-import { PaginatedContentsResponse } from '@/lib/types/content';
 
 interface PageProps {
   params: Promise<{
     locale: string;
-    topic: string;
   }>;
   searchParams: Promise<{
-    t?: string;
     page?: string;
   }>;
 }
 
-export default async function DoraWorldListPage({
+export default async function FujikoMuseumListPage({
   params,
   searchParams,
 }: PageProps) {
-  const { topic, locale } = await params;
-  const { t: topicId, page: pageParam } = await searchParams;
+  const { locale } = await params;
+  const { page: pageParam } = await searchParams;
   const isLoggedIn = await checkAuth();
   const currentPage = pageParam ? parseInt(pageParam, 10) : 1;
 
-  let result: PaginatedContentsResponse;
-  if (topic === 'contents' && !topicId) {
-    result = await fetchContentsFromDirectus({
-      locale,
-      page: currentPage,
-      limit: 30,
-    });
-  } else {
-    const nextBuildId = await fetchBuildId();
-    result = await fetchContents({
-      nextBuildId,
-      topic,
-      topicId,
-      page: currentPage,
-    });
-  }
+  const result = await fetchPostsFromDirectus({
+    locale,
+    page: currentPage,
+    limit: 30,
+  });
 
-  const basePath = `/${locale}/dora-world/${topic}`;
-  const searchParamsObj: Record<string, string> = {};
-  if (topicId) searchParamsObj.t = topicId;
+  const basePath = `/${locale}/fujiko-museum/blog`;
 
-  const navigationState: Record<string, string | number> = {
+  const navigationState = {
     page: currentPage,
   };
-  if (topicId) navigationState.t = topicId;
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20">
       <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <header className="mb-10">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            <T>Articles</T>
+            <T>Blog</T>
           </h1>
         </header>
 
@@ -77,11 +56,10 @@ export default async function DoraWorldListPage({
                   id={article.id}
                   title={article.title}
                   imageUrl={article.image_url}
-                  basePath={`/${locale}/dora-world/contents`}
                   isLoggedIn={isLoggedIn}
-                  pageUrl={article.page_url}
                   navigationState={navigationState}
-                  aspectRatio="aspect-29/19"
+                  aspectRatio="aspect-16/11"
+                  basePath={basePath}
                 />
               ))}
             </div>
@@ -91,7 +69,7 @@ export default async function DoraWorldListPage({
                 currentPage={currentPage}
                 totalPages={result.meta.totalPages}
                 basePath={basePath}
-                searchParams={searchParamsObj}
+                searchParams={{}}
               />
             )}
           </>

@@ -185,7 +185,7 @@ export function Pagination({
           disabled={!jumpPage || parseInt(jumpPage, 10) === currentPage}
           className="h-9"
         >
-          <T>Go</T>
+          Go
         </Button>
       </div>
     </nav>

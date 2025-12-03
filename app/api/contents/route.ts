@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { replacePlaceholders } from '@/lib/services/dora-world';
 import { fetchDirectusTerms } from '@/lib/services/directus-terms';
+import { replacePlaceholders } from '@/lib/utils/content-helpers';
 
-interface RouteParams {
-  params: Promise<{
-    contentId: string;
-  }>;
-}
-
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest) {
   try {
-    const { contentId } = await params;
     const locale = request.nextUrl.searchParams.get('locale') || 'en';
+    const path = request.nextUrl.searchParams.get('path');
 
-    const basePath = `/fujiko-today/dora-world/contents/${contentId}`;
-    const remoteUrl = `${process.env.CONTENTS_URL}/d${basePath}/${locale}/content.md`;
+    if (!path) {
+      return NextResponse.json(
+        { error: 'Path parameter is required' },
+        { status: 400 },
+      );
+    }
+
+    const remoteUrl = `${process.env.CONTENTS_URL}/d${path}`;
 
     const response = await fetch(remoteUrl);
 
