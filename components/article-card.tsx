@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -8,6 +10,12 @@ interface ArticleCardProps {
   imageUrl: string;
   className?: string;
   isLoggedIn?: boolean;
+  pageUrl?: string;
+  navigationState?: {
+    topic: string;
+    topicId?: string;
+    page: number;
+  };
 }
 
 export function ArticleCard({
@@ -16,13 +24,32 @@ export function ArticleCard({
   imageUrl,
   className,
   isLoggedIn = false,
+  pageUrl,
+  navigationState,
 }: ArticleCardProps) {
-  const href = isLoggedIn
-    ? `/dora-world/contents/${id}/analyze`
-    : `/dora-world/contents/${id}`;
+  const isExternalUrl = pageUrl?.startsWith('http');
 
-  return (
-    <Link href={href} className={cn('block group', className)}>
+  const href = isExternalUrl
+    ? pageUrl
+    : isLoggedIn
+      ? `/dora-world/contents/${id}/analyze`
+      : `/dora-world/contents/${id}`;
+
+  const handleClick = () => {
+    if (!isExternalUrl && navigationState) {
+      try {
+        sessionStorage.setItem(
+          'dora_nav_state',
+          JSON.stringify(navigationState),
+        );
+      } catch (error) {
+        console.error('Failed to save navigation state:', error);
+      }
+    }
+  };
+
+  const cardContent = (
+    <>
       <div className="relative aspect-29/19 overflow-hidden rounded-xl bg-muted">
         <Image
           src={imageUrl}
@@ -35,6 +62,30 @@ export function ArticleCard({
       <h3 className="mt-3 text-sm md:text-base font-medium group-hover:text-primary transition-colors">
         {title}
       </h3>
+    </>
+  );
+
+  if (isExternalUrl) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn('block group', className)}
+        onClick={handleClick}
+      >
+        {cardContent}
+      </a>
+    );
+  }
+
+  return (
+    <Link
+      href={href!}
+      className={cn('block group', className)}
+      onClick={handleClick}
+    >
+      {cardContent}
     </Link>
   );
 }

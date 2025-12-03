@@ -1,7 +1,13 @@
-import { fetchBuildId, fetchContents } from '@/lib/services/dora-world';
+import {
+  fetchBuildId,
+  fetchContents,
+  fetchContentsFromDirectus,
+} from '@/lib/services/dora-world';
 import { ArticleCard } from '@/components/article-card';
+import { Pagination } from '@/components/pagination';
 import { T } from 'gt-next';
 import { checkAuth } from '@/lib/auth';
+import { PaginatedContentsResponse } from '@/lib/types/content';
 
 interface PageProps {
   params: Promise<{
@@ -10,6 +16,7 @@ interface PageProps {
   }>;
   searchParams: Promise<{
     t?: string;
+    page?: string;
   }>;
 }
 
@@ -17,17 +24,37 @@ export default async function DoraWorldListPage({
   params,
   searchParams,
 }: PageProps) {
-  const { topic } = await params;
-  const { t: topicId } = await searchParams;
+  const { topic, locale } = await params;
+  const { t: topicId, page: pageParam } = await searchParams;
   const isLoggedIn = await checkAuth();
-  const nextBuildId = await fetchBuildId();
-  const response = await fetchContents({
-    nextBuildId,
+  const currentPage = pageParam ? parseInt(pageParam, 10) : 1;
+
+  let result: PaginatedContentsResponse;
+  if (topic === 'contents' && !topicId) {
+    result = await fetchContentsFromDirectus({
+      locale,
+      page: currentPage,
+      limit: 30,
+    });
+  } else {
+    const nextBuildId = await fetchBuildId();
+    result = await fetchContents({
+      nextBuildId,
+      topic,
+      topicId,
+      page: currentPage,
+    });
+  }
+
+  const basePath = `/${locale}/dora-world/${topic}`;
+  const searchParamsObj: Record<string, string> = {};
+  if (topicId) searchParamsObj.t = topicId;
+
+  const navigationState = {
     topic,
     topicId,
-  });
-
-  const articles = response?.pageProps.contents || [];
+    page: currentPage,
+  };
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20">
@@ -38,22 +65,35 @@ export default async function DoraWorldListPage({
           </h1>
         </header>
 
-        {articles.length === 0 ? (
+        {result.contents.length === 0 ? (
           <p className="text-muted-foreground py-12">
             <T>No articles found</T>
           </p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
-            {articles.map((article) => (
-              <ArticleCard
-                key={article.id}
-                id={article.id}
-                title={article.title}
-                imageUrl={article.image_url}
-                isLoggedIn={isLoggedIn}
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
+              {result.contents.map((article) => (
+                <ArticleCard
+                  key={article.id}
+                  id={article.id}
+                  title={article.title}
+                  imageUrl={article.image_url}
+                  isLoggedIn={isLoggedIn}
+                  pageUrl={article.page_url}
+                  navigationState={navigationState}
+                />
+              ))}
+            </div>
+
+            {result.meta.totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={result.meta.totalPages}
+                basePath={basePath}
+                searchParams={searchParamsObj}
               />
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -344,7 +344,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/items/dora_world_contents': {
+  '/items/dora_world_contents_translations': {
     parameters: {
       query?: never;
       header?: never;
@@ -353,26 +353,26 @@ export interface paths {
     };
     /**
      * List Items
-     * @description List the dora_world_contents items.
+     * @description List the dora_world_contents_translations items.
      */
-    get: operations['readItemsDoraWorldContents'];
+    get: operations['readItemsDoraWorldContentsTranslations'];
     put?: never;
     /**
      * Create an Item
-     * @description Create a new dora_world_contents item.
+     * @description Create a new dora_world_contents_translations item.
      */
-    post: operations['createItemsDoraWorldContents'];
+    post: operations['createItemsDoraWorldContentsTranslations'];
     delete?: never;
     options?: never;
     head?: never;
     /**
      * Update Multiple Items
-     * @description Update multiple dora_world_contents items at the same time.
+     * @description Update multiple dora_world_contents_translations items at the same time.
      */
-    patch: operations['updateItemsDoraWorldContents'];
+    patch: operations['updateItemsDoraWorldContentsTranslations'];
     trace?: never;
   };
-  '/items/dora_world_contents/{id}': {
+  '/items/dora_world_contents_translations/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -381,9 +381,9 @@ export interface paths {
     };
     /**
      * Retrieve an Item
-     * @description Retrieve a single dora_world_contents item by unique identifier.
+     * @description Retrieve a single dora_world_contents_translations item by unique identifier.
      */
-    get: operations['readSingleItemsDoraWorldContents'];
+    get: operations['readSingleItemsDoraWorldContentsTranslations'];
     put?: never;
     post?: never;
     delete?: never;
@@ -391,9 +391,9 @@ export interface paths {
     head?: never;
     /**
      * Update an Item
-     * @description Update an existing dora_world_contents item.
+     * @description Update an existing dora_world_contents_translations item.
      */
-    patch: operations['updateSingleItemsDoraWorldContents'];
+    patch: operations['updateSingleItemsDoraWorldContentsTranslations'];
     trace?: never;
   };
   '/items/languages': {
@@ -448,7 +448,7 @@ export interface paths {
     patch: operations['updateSingleItemsLanguages'];
     trace?: never;
   };
-  '/items/dora_world_contents_translations': {
+  '/items/dora_world_contents': {
     parameters: {
       query?: never;
       header?: never;
@@ -457,26 +457,26 @@ export interface paths {
     };
     /**
      * List Items
-     * @description List the dora_world_contents_translations items.
+     * @description List the dora_world_contents items.
      */
-    get: operations['readItemsDoraWorldContentsTranslations'];
+    get: operations['readItemsDoraWorldContents'];
     put?: never;
     /**
      * Create an Item
-     * @description Create a new dora_world_contents_translations item.
+     * @description Create a new dora_world_contents item.
      */
-    post: operations['createItemsDoraWorldContentsTranslations'];
+    post: operations['createItemsDoraWorldContents'];
     delete?: never;
     options?: never;
     head?: never;
     /**
      * Update Multiple Items
-     * @description Update multiple dora_world_contents_translations items at the same time.
+     * @description Update multiple dora_world_contents items at the same time.
      */
-    patch: operations['updateItemsDoraWorldContentsTranslations'];
+    patch: operations['updateItemsDoraWorldContents'];
     trace?: never;
   };
-  '/items/dora_world_contents_translations/{id}': {
+  '/items/dora_world_contents/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -485,9 +485,9 @@ export interface paths {
     };
     /**
      * Retrieve an Item
-     * @description Retrieve a single dora_world_contents_translations item by unique identifier.
+     * @description Retrieve a single dora_world_contents item by unique identifier.
      */
-    get: operations['readSingleItemsDoraWorldContentsTranslations'];
+    get: operations['readSingleItemsDoraWorldContents'];
     put?: never;
     post?: never;
     delete?: never;
@@ -495,9 +495,9 @@ export interface paths {
     head?: never;
     /**
      * Update an Item
-     * @description Update an existing dora_world_contents_translations item.
+     * @description Update an existing dora_world_contents item.
      */
-    patch: operations['updateSingleItemsDoraWorldContentsTranslations'];
+    patch: operations['updateSingleItemsDoraWorldContents'];
     trace?: never;
   };
   '/items/fujiko_museum_contents': {
@@ -1469,6 +1469,21 @@ export interface components {
       /** @description Returns the item count of the collection you're querying, taking the current filter/search parameters into account. */
       filter_count?: number;
     };
+    ItemsDoraWorldContentsTranslations: {
+      id?: number;
+      dora_world_contents_id?:
+        | (string | components['schemas']['ItemsDoraWorldContents'])
+        | null;
+      languages_code?:
+        | (string | components['schemas']['ItemsLanguages'])
+        | null;
+      title?: string | null;
+    };
+    ItemsLanguages: {
+      code: string;
+      name?: string | null;
+      direction?: string | null;
+    };
     ItemsDoraWorldContents: {
       id: string;
       status?: string;
@@ -1477,25 +1492,13 @@ export interface components {
       date_created?: string | null;
       /** Format: timestamp */
       date_updated?: string | null;
+      page_url?: string | null;
+      image_url?: string | null;
       translations?:
         | (
             | number
             | components['schemas']['ItemsDoraWorldContentsTranslations']
           )[]
-        | null;
-    };
-    ItemsLanguages: {
-      code: string;
-      name?: string | null;
-      direction?: string | null;
-    };
-    ItemsDoraWorldContentsTranslations: {
-      id?: number;
-      dora_world_contents_id?:
-        | (string | components['schemas']['ItemsDoraWorldContents'])
-        | null;
-      languages_code?:
-        | (string | components['schemas']['ItemsLanguages'])
         | null;
     };
     ItemsFujikoMuseumContents: {
@@ -2231,7 +2234,7 @@ export interface operations {
       };
     };
   };
-  readItemsDoraWorldContents: {
+  readItemsDoraWorldContentsTranslations: {
     parameters: {
       query?: {
         /** @description Control what fields are being returned in the object. */
@@ -2262,7 +2265,7 @@ export interface operations {
         };
         content: {
           'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContents'][];
+            data?: components['schemas']['ItemsDoraWorldContentsTranslations'][];
             meta?: components['schemas']['x-metadata'];
           };
         };
@@ -2270,7 +2273,7 @@ export interface operations {
       401: components['responses']['UnauthorizedError'];
     };
   };
-  createItemsDoraWorldContents: {
+  createItemsDoraWorldContentsTranslations: {
     parameters: {
       query?: {
         /** @description What metadata to return in the response. */
@@ -2283,8 +2286,8 @@ export interface operations {
     requestBody?: {
       content: {
         'application/json':
-          | components['schemas']['ItemsDoraWorldContents'][]
-          | components['schemas']['ItemsDoraWorldContents'];
+          | components['schemas']['ItemsDoraWorldContentsTranslations'][]
+          | components['schemas']['ItemsDoraWorldContentsTranslations'];
       };
     };
     responses: {
@@ -2295,14 +2298,14 @@ export interface operations {
         };
         content: {
           'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContents'][];
+            data?: components['schemas']['ItemsDoraWorldContentsTranslations'][];
           };
         };
       };
       401: components['responses']['UnauthorizedError'];
     };
   };
-  updateItemsDoraWorldContents: {
+  updateItemsDoraWorldContentsTranslations: {
     parameters: {
       query?: {
         /** @description Control what fields are being returned in the object. */
@@ -2327,8 +2330,8 @@ export interface operations {
     requestBody?: {
       content: {
         'application/json':
-          | components['schemas']['ItemsDoraWorldContents'][]
-          | components['schemas']['ItemsDoraWorldContents'];
+          | components['schemas']['ItemsDoraWorldContentsTranslations'][]
+          | components['schemas']['ItemsDoraWorldContentsTranslations'];
       };
     };
     responses: {
@@ -2339,13 +2342,13 @@ export interface operations {
         };
         content: {
           'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContents'][];
+            data?: components['schemas']['ItemsDoraWorldContentsTranslations'][];
           };
         };
       };
     };
   };
-  readSingleItemsDoraWorldContents: {
+  readSingleItemsDoraWorldContentsTranslations: {
     parameters: {
       query?: {
         /** @description Control what fields are being returned in the object. */
@@ -2371,7 +2374,7 @@ export interface operations {
         };
         content: {
           'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContents'];
+            data?: components['schemas']['ItemsDoraWorldContentsTranslations'];
           };
         };
       };
@@ -2379,7 +2382,7 @@ export interface operations {
       404: components['responses']['NotFoundError'];
     };
   };
-  updateSingleItemsDoraWorldContents: {
+  updateSingleItemsDoraWorldContentsTranslations: {
     parameters: {
       query?: {
         /** @description Control what fields are being returned in the object. */
@@ -2396,7 +2399,7 @@ export interface operations {
     };
     requestBody?: {
       content: {
-        'application/json': components['schemas']['ItemsDoraWorldContents'];
+        'application/json': components['schemas']['ItemsDoraWorldContentsTranslations'];
       };
     };
     responses: {
@@ -2407,7 +2410,7 @@ export interface operations {
         };
         content: {
           'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContents'];
+            data?: components['schemas']['ItemsDoraWorldContentsTranslations'];
           };
         };
       };
@@ -2599,7 +2602,7 @@ export interface operations {
       404: components['responses']['NotFoundError'];
     };
   };
-  readItemsDoraWorldContentsTranslations: {
+  readItemsDoraWorldContents: {
     parameters: {
       query?: {
         /** @description Control what fields are being returned in the object. */
@@ -2630,7 +2633,7 @@ export interface operations {
         };
         content: {
           'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContentsTranslations'][];
+            data?: components['schemas']['ItemsDoraWorldContents'][];
             meta?: components['schemas']['x-metadata'];
           };
         };
@@ -2638,7 +2641,7 @@ export interface operations {
       401: components['responses']['UnauthorizedError'];
     };
   };
-  createItemsDoraWorldContentsTranslations: {
+  createItemsDoraWorldContents: {
     parameters: {
       query?: {
         /** @description What metadata to return in the response. */
@@ -2651,8 +2654,8 @@ export interface operations {
     requestBody?: {
       content: {
         'application/json':
-          | components['schemas']['ItemsDoraWorldContentsTranslations'][]
-          | components['schemas']['ItemsDoraWorldContentsTranslations'];
+          | components['schemas']['ItemsDoraWorldContents'][]
+          | components['schemas']['ItemsDoraWorldContents'];
       };
     };
     responses: {
@@ -2663,14 +2666,14 @@ export interface operations {
         };
         content: {
           'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContentsTranslations'][];
+            data?: components['schemas']['ItemsDoraWorldContents'][];
           };
         };
       };
       401: components['responses']['UnauthorizedError'];
     };
   };
-  updateItemsDoraWorldContentsTranslations: {
+  updateItemsDoraWorldContents: {
     parameters: {
       query?: {
         /** @description Control what fields are being returned in the object. */
@@ -2695,8 +2698,8 @@ export interface operations {
     requestBody?: {
       content: {
         'application/json':
-          | components['schemas']['ItemsDoraWorldContentsTranslations'][]
-          | components['schemas']['ItemsDoraWorldContentsTranslations'];
+          | components['schemas']['ItemsDoraWorldContents'][]
+          | components['schemas']['ItemsDoraWorldContents'];
       };
     };
     responses: {
@@ -2707,13 +2710,13 @@ export interface operations {
         };
         content: {
           'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContentsTranslations'][];
+            data?: components['schemas']['ItemsDoraWorldContents'][];
           };
         };
       };
     };
   };
-  readSingleItemsDoraWorldContentsTranslations: {
+  readSingleItemsDoraWorldContents: {
     parameters: {
       query?: {
         /** @description Control what fields are being returned in the object. */
@@ -2739,7 +2742,7 @@ export interface operations {
         };
         content: {
           'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContentsTranslations'];
+            data?: components['schemas']['ItemsDoraWorldContents'];
           };
         };
       };
@@ -2747,7 +2750,7 @@ export interface operations {
       404: components['responses']['NotFoundError'];
     };
   };
-  updateSingleItemsDoraWorldContentsTranslations: {
+  updateSingleItemsDoraWorldContents: {
     parameters: {
       query?: {
         /** @description Control what fields are being returned in the object. */
@@ -2764,7 +2767,7 @@ export interface operations {
     };
     requestBody?: {
       content: {
-        'application/json': components['schemas']['ItemsDoraWorldContentsTranslations'];
+        'application/json': components['schemas']['ItemsDoraWorldContents'];
       };
     };
     responses: {
@@ -2775,7 +2778,7 @@ export interface operations {
         };
         content: {
           'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContentsTranslations'];
+            data?: components['schemas']['ItemsDoraWorldContents'];
           };
         };
       };

@@ -5,9 +5,7 @@ import {
 import { ArticleContent } from '@/components/article-content';
 import { triggerContentTranslationAction } from '@/lib/actions/translate';
 import { after } from 'next/server';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-import { T } from 'gt-next';
+import { BackToList } from '@/components/back-to-list';
 
 interface PageProps {
   params: Promise<{
@@ -48,13 +46,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto py-6 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8 w-full max-w-[min(65ch,90vw)] lg:max-w-[min(75ch,70vw)] xl:max-w-[min(80ch,60vw)]">
-        <Link
-          href={`/dora-world/contents`}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          <T>Back to List</T>
-        </Link>
+        <BackToList locale={locale} />
         <article className="mt-4 sm:mt-6 md:mt-8">
           <ArticleContent
             contentId={contentId}

@@ -1,8 +1,10 @@
 import * as cheerio from 'cheerio';
 import TurndownService from 'turndown';
 import type { DirectusTerm, LanguageCode } from '@/lib/types/term';
+import type { PaginatedContentsResponse } from '@/lib/types/content';
 import { fetchDirectusTerms } from '@/lib/services/directus-terms';
 import { TriggerContentTranslationParams } from '@/lib/schemas/translate-content';
+import client from '@/lib/api/client';
 
 const BASE_URL = 'https://www.dora-world.com';
 const turndownService = new TurndownService();
@@ -15,7 +17,7 @@ turndownService.addRule('anchor-with-block', {
       blockTags.has(n.nodeName),
     );
   },
-  replacement: function (content, node) {
+  replacement: function (_content, node) {
     let href = node.getAttribute('href') || '';
     if (href && href.startsWith('/')) {
       href = BASE_URL + href;
@@ -37,6 +39,7 @@ interface ContentsResponse {
       title: string;
       image_url: string;
     }>;
+    total_count: number;
   };
 }
 
@@ -47,6 +50,26 @@ interface ContentResponse {
       content: string;
     };
   };
+}
+
+function findTranslationByLanguage(
+  translations: unknown[] | null | undefined,
+  languageCode: string,
+): unknown {
+  return translations?.find((t) => {
+    if (typeof t !== 'object' || t === null || !('languages_code' in t))
+      return false;
+    const langCode = (t as { languages_code: unknown }).languages_code;
+    if (typeof langCode === 'string') return langCode === languageCode;
+    if (
+      typeof langCode === 'object' &&
+      langCode !== null &&
+      'code' in langCode
+    ) {
+      return (langCode as { code: string }).code === languageCode;
+    }
+    return false;
+  });
 }
 
 export async function fetchBuildId(): Promise<string> {
@@ -65,6 +88,80 @@ export async function fetchBuildId(): Promise<string> {
   return nextData.buildId;
 }
 
+export async function fetchContentsFromDirectus({
+  locale,
+  page = 1,
+  limit = 30,
+}: {
+  locale: string;
+  page?: number;
+  limit?: number;
+}): Promise<PaginatedContentsResponse> {
+  const offset = (page - 1) * limit;
+
+  const response = await client.GET('/items/dora_world_contents', {
+    params: {
+      query: {
+        fields: ['id', 'page_url', 'image_url', 'translations.*'],
+        limit,
+        offset,
+        meta: '*',
+        filter: JSON.stringify({
+          status: { _eq: 'published' },
+        }),
+        sort: ['-date_updated'],
+      },
+    },
+  });
+
+  if (!response.data?.data) {
+    return {
+      contents: [],
+      meta: {
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      },
+    };
+  }
+
+  const contents = response.data.data.map((item) => {
+    let translation = findTranslationByLanguage(item.translations, locale);
+
+    if (!translation && locale !== 'ja') {
+      translation = findTranslationByLanguage(item.translations, 'ja');
+    }
+
+    const title =
+      typeof translation === 'object' &&
+      translation !== null &&
+      'title' in translation
+        ? (translation.title as string) || ''
+        : '';
+
+    return {
+      id: parseInt(item.id),
+      page_url: item.page_url || '',
+      title,
+      image_url: item.image_url || '',
+    };
+  });
+
+  const total = response.data.meta?.filter_count ?? 0;
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    contents,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages,
+    },
+  };
+}
+
 export async function fetchContents({
   nextBuildId,
   topic,
@@ -75,7 +172,7 @@ export async function fetchContents({
   topic: string;
   topicId?: string;
   page?: number;
-}) {
+}): Promise<PaginatedContentsResponse> {
   const params = new URLSearchParams();
   if (topicId) params.append('t', topicId);
   if (page && page > 1) params.append('page', page.toString());
@@ -89,7 +186,20 @@ export async function fetchContents({
     },
   });
   const data: ContentsResponse = await dataResponse.json();
-  return data;
+
+  const contents = data?.pageProps?.contents || [];
+  const total = data?.pageProps?.total_count || 0;
+  const totalPages = Math.ceil(total / 30);
+
+  return {
+    contents,
+    meta: {
+      total,
+      page,
+      limit: 30,
+      totalPages,
+    },
+  };
 }
 
 export async function getContent({
@@ -106,12 +216,25 @@ export async function getContent({
   const content = data.pageProps.content;
   const $ = cheerio.load(content.content || '');
   const main = $('.main_unit');
-  main.find('.tag').remove();
-  main.find('div[style="display:none"]').remove();
-  main.find('ruby').remove();
 
-  const markdown = turndownService.turndown($.html(main) || '');
+  const element = main.length > 0 ? main : $('body');
 
+  element.find('.tag').remove();
+  element.find('.sns_Area').remove();
+  element.find('div[style="display:none"]').remove();
+  element.find('ruby').remove();
+
+  element.find('img').each((_, img) => {
+    const src = $(img).attr('src');
+    if (src && !src.startsWith('http')) {
+      $(img).attr(
+        'src',
+        `https://contents.dora-world.com${src.startsWith('/') ? '' : '/'}${src}`,
+      );
+    }
+  });
+
+  const markdown = turndownService.turndown($.html(element) || '');
   return markdown;
 }
 

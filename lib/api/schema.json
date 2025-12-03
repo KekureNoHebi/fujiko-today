@@ -3,7 +3,7 @@
   "info": {
     "title": "Dynamic API Specification",
     "description": "This is a dynamically generated API specification for all endpoints existing on the current project.",
-    "version": "5e1c840ff9eb0daeaca75870b2faa6ad9d6d8665"
+    "version": "01551dff30f4fbba4dff4ae8a0c9ec367e11733b"
   },
   "servers": [
     {
@@ -724,12 +724,12 @@
         "tags": ["Utilities"]
       }
     },
-    "/items/dora_world_contents": {
+    "/items/dora_world_contents_translations": {
       "post": {
         "summary": "Create an Item",
-        "description": "Create a new dora_world_contents item.",
-        "tags": ["Items", "ItemsDoraWorldContents"],
-        "operationId": "createItemsDoraWorldContents",
+        "description": "Create a new dora_world_contents_translations item.",
+        "tags": ["Items", "ItemsDoraWorldContentsTranslations"],
+        "operationId": "createItemsDoraWorldContentsTranslations",
         "parameters": [
           {
             "$ref": "#/components/parameters/Meta"
@@ -743,11 +743,11 @@
                   {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/ItemsDoraWorldContents"
+                      "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
                     }
                   },
                   {
-                    "$ref": "#/components/schemas/ItemsDoraWorldContents"
+                    "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
                   }
                 ]
               }
@@ -765,7 +765,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/ItemsDoraWorldContents"
+                        "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
                       }
                     }
                   }
@@ -780,9 +780,9 @@
       },
       "get": {
         "summary": "List Items",
-        "description": "List the dora_world_contents items.",
-        "tags": ["Items", "ItemsDoraWorldContents"],
-        "operationId": "readItemsDoraWorldContents",
+        "description": "List the dora_world_contents_translations items.",
+        "tags": ["Items", "ItemsDoraWorldContentsTranslations"],
+        "operationId": "readItemsDoraWorldContentsTranslations",
         "security": [
           {
             "Auth": []
@@ -823,7 +823,7 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "$ref": "#/components/schemas/ItemsDoraWorldContents"
+                        "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
                       }
                     },
                     "meta": {
@@ -841,9 +841,9 @@
       },
       "patch": {
         "summary": "Update Multiple Items",
-        "description": "Update multiple dora_world_contents items at the same time.",
-        "tags": ["Items", "ItemsDoraWorldContents"],
-        "operationId": "updateItemsDoraWorldContents",
+        "description": "Update multiple dora_world_contents_translations items at the same time.",
+        "tags": ["Items", "ItemsDoraWorldContentsTranslations"],
+        "operationId": "updateItemsDoraWorldContentsTranslations",
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -875,11 +875,11 @@
                   {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/ItemsDoraWorldContents"
+                      "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
                     }
                   },
                   {
-                    "$ref": "#/components/schemas/ItemsDoraWorldContents"
+                    "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
                   }
                 ]
               }
@@ -896,7 +896,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/ItemsDoraWorldContents"
+                        "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
                       }
                     }
                   }
@@ -907,12 +907,12 @@
         }
       }
     },
-    "/items/dora_world_contents/{id}": {
+    "/items/dora_world_contents_translations/{id}": {
       "get": {
         "summary": "Retrieve an Item",
-        "description": "Retrieve a single dora_world_contents item by unique identifier.",
-        "tags": ["Items", "ItemsDoraWorldContents"],
-        "operationId": "readSingleItemsDoraWorldContents",
+        "description": "Retrieve a single dora_world_contents_translations item by unique identifier.",
+        "tags": ["Items", "ItemsDoraWorldContentsTranslations"],
+        "operationId": "readSingleItemsDoraWorldContentsTranslations",
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -954,7 +954,7 @@
                   "properties": {
                     "data": {
                       "type": "object",
-                      "$ref": "#/components/schemas/ItemsDoraWorldContents"
+                      "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
                     }
                   }
                 }
@@ -971,9 +971,9 @@
       },
       "patch": {
         "summary": "Update an Item",
-        "description": "Update an existing dora_world_contents item.",
-        "tags": ["Items", "ItemsDoraWorldContents"],
-        "operationId": "updateSingleItemsDoraWorldContents",
+        "description": "Update an existing dora_world_contents_translations item.",
+        "tags": ["Items", "ItemsDoraWorldContentsTranslations"],
+        "operationId": "updateSingleItemsDoraWorldContentsTranslations",
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -1007,7 +1007,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "$ref": "#/components/schemas/ItemsDoraWorldContents"
+                "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
               }
             }
           }
@@ -1022,7 +1022,7 @@
                   "properties": {
                     "data": {
                       "type": "object",
-                      "$ref": "#/components/schemas/ItemsDoraWorldContents"
+                      "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
                     }
                   }
                 }
@@ -1352,12 +1352,12 @@
         }
       }
     },
-    "/items/dora_world_contents_translations": {
+    "/items/dora_world_contents": {
       "post": {
         "summary": "Create an Item",
-        "description": "Create a new dora_world_contents_translations item.",
-        "tags": ["Items", "ItemsDoraWorldContentsTranslations"],
-        "operationId": "createItemsDoraWorldContentsTranslations",
+        "description": "Create a new dora_world_contents item.",
+        "tags": ["Items", "ItemsDoraWorldContents"],
+        "operationId": "createItemsDoraWorldContents",
         "parameters": [
           {
             "$ref": "#/components/parameters/Meta"
@@ -1371,11 +1371,11 @@
                   {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
+                      "$ref": "#/components/schemas/ItemsDoraWorldContents"
                     }
                   },
                   {
-                    "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
+                    "$ref": "#/components/schemas/ItemsDoraWorldContents"
                   }
                 ]
               }
@@ -1393,7 +1393,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
+                        "$ref": "#/components/schemas/ItemsDoraWorldContents"
                       }
                     }
                   }
@@ -1408,9 +1408,9 @@
       },
       "get": {
         "summary": "List Items",
-        "description": "List the dora_world_contents_translations items.",
-        "tags": ["Items", "ItemsDoraWorldContentsTranslations"],
-        "operationId": "readItemsDoraWorldContentsTranslations",
+        "description": "List the dora_world_contents items.",
+        "tags": ["Items", "ItemsDoraWorldContents"],
+        "operationId": "readItemsDoraWorldContents",
         "security": [
           {
             "Auth": []
@@ -1451,7 +1451,7 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
+                        "$ref": "#/components/schemas/ItemsDoraWorldContents"
                       }
                     },
                     "meta": {
@@ -1469,9 +1469,9 @@
       },
       "patch": {
         "summary": "Update Multiple Items",
-        "description": "Update multiple dora_world_contents_translations items at the same time.",
-        "tags": ["Items", "ItemsDoraWorldContentsTranslations"],
-        "operationId": "updateItemsDoraWorldContentsTranslations",
+        "description": "Update multiple dora_world_contents items at the same time.",
+        "tags": ["Items", "ItemsDoraWorldContents"],
+        "operationId": "updateItemsDoraWorldContents",
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -1503,11 +1503,11 @@
                   {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
+                      "$ref": "#/components/schemas/ItemsDoraWorldContents"
                     }
                   },
                   {
-                    "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
+                    "$ref": "#/components/schemas/ItemsDoraWorldContents"
                   }
                 ]
               }
@@ -1524,7 +1524,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
+                        "$ref": "#/components/schemas/ItemsDoraWorldContents"
                       }
                     }
                   }
@@ -1535,12 +1535,12 @@
         }
       }
     },
-    "/items/dora_world_contents_translations/{id}": {
+    "/items/dora_world_contents/{id}": {
       "get": {
         "summary": "Retrieve an Item",
-        "description": "Retrieve a single dora_world_contents_translations item by unique identifier.",
-        "tags": ["Items", "ItemsDoraWorldContentsTranslations"],
-        "operationId": "readSingleItemsDoraWorldContentsTranslations",
+        "description": "Retrieve a single dora_world_contents item by unique identifier.",
+        "tags": ["Items", "ItemsDoraWorldContents"],
+        "operationId": "readSingleItemsDoraWorldContents",
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -1582,7 +1582,7 @@
                   "properties": {
                     "data": {
                       "type": "object",
-                      "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
+                      "$ref": "#/components/schemas/ItemsDoraWorldContents"
                     }
                   }
                 }
@@ -1599,9 +1599,9 @@
       },
       "patch": {
         "summary": "Update an Item",
-        "description": "Update an existing dora_world_contents_translations item.",
-        "tags": ["Items", "ItemsDoraWorldContentsTranslations"],
-        "operationId": "updateSingleItemsDoraWorldContentsTranslations",
+        "description": "Update an existing dora_world_contents item.",
+        "tags": ["Items", "ItemsDoraWorldContents"],
+        "operationId": "updateSingleItemsDoraWorldContents",
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -1635,7 +1635,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
+                "$ref": "#/components/schemas/ItemsDoraWorldContents"
               }
             }
           }
@@ -1650,7 +1650,7 @@
                   "properties": {
                     "data": {
                       "type": "object",
-                      "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
+                      "$ref": "#/components/schemas/ItemsDoraWorldContents"
                     }
                   }
                 }
@@ -5769,16 +5769,16 @@
       "x-schemas": ["Files", "Folders", "Users", "Roles"]
     },
     {
-      "name": "ItemsDoraWorldContents",
-      "x-collection": "dora_world_contents"
+      "name": "ItemsDoraWorldContentsTranslations",
+      "x-collection": "dora_world_contents_translations"
     },
     {
       "name": "ItemsLanguages",
       "x-collection": "languages"
     },
     {
-      "name": "ItemsDoraWorldContentsTranslations",
-      "x-collection": "dora_world_contents_translations"
+      "name": "ItemsDoraWorldContents",
+      "x-collection": "dora_world_contents"
     },
     {
       "name": "ItemsFujikoMuseumContents",
@@ -6236,68 +6236,6 @@
           }
         }
       },
-      "ItemsDoraWorldContents": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "nullable": false,
-            "type": "string"
-          },
-          "status": {
-            "nullable": false,
-            "type": "string"
-          },
-          "sort": {
-            "nullable": true,
-            "type": "integer"
-          },
-          "date_created": {
-            "nullable": true,
-            "type": "string",
-            "format": "timestamp"
-          },
-          "date_updated": {
-            "nullable": true,
-            "type": "string",
-            "format": "timestamp"
-          },
-          "translations": {
-            "nullable": true,
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
-                }
-              ]
-            }
-          }
-        },
-        "x-collection": "dora_world_contents",
-        "required": ["id"]
-      },
-      "ItemsLanguages": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "nullable": false,
-            "type": "string"
-          },
-          "name": {
-            "nullable": true,
-            "type": "string"
-          },
-          "direction": {
-            "nullable": true,
-            "type": "string"
-          }
-        },
-        "x-collection": "languages",
-        "required": ["code"]
-      },
       "ItemsDoraWorldContentsTranslations": {
         "type": "object",
         "properties": {
@@ -6326,9 +6264,83 @@
                 "$ref": "#/components/schemas/ItemsLanguages"
               }
             ]
+          },
+          "title": {
+            "nullable": true,
+            "type": "string"
           }
         },
         "x-collection": "dora_world_contents_translations"
+      },
+      "ItemsLanguages": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "nullable": false,
+            "type": "string"
+          },
+          "name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "direction": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "x-collection": "languages",
+        "required": ["code"]
+      },
+      "ItemsDoraWorldContents": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "nullable": false,
+            "type": "string"
+          },
+          "status": {
+            "nullable": false,
+            "type": "string"
+          },
+          "sort": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "date_created": {
+            "nullable": true,
+            "type": "string",
+            "format": "timestamp"
+          },
+          "date_updated": {
+            "nullable": true,
+            "type": "string",
+            "format": "timestamp"
+          },
+          "page_url": {
+            "nullable": true,
+            "type": "string"
+          },
+          "image_url": {
+            "nullable": true,
+            "type": "string"
+          },
+          "translations": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "$ref": "#/components/schemas/ItemsDoraWorldContentsTranslations"
+                }
+              ]
+            }
+          }
+        },
+        "x-collection": "dora_world_contents",
+        "required": ["id"]
       },
       "ItemsFujikoMuseumContents": {
         "type": "object",

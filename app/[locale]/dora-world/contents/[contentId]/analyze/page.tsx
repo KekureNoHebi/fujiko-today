@@ -5,9 +5,7 @@ import { TermAnalyzer } from '@/components/term-analyzer';
 import { LoginForm } from '@/components/login-form';
 import { checkAuth } from '@/lib/auth';
 import remarkBreaks from 'remark-breaks';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-import { T } from 'gt-next';
+import { BackToList } from '@/components/back-to-list';
 
 interface PageProps {
   params: Promise<{
@@ -17,7 +15,7 @@ interface PageProps {
 }
 
 export default async function ArticleAnalyzePage({ params }: PageProps) {
-  const { contentId } = await params;
+  const { contentId, locale } = await params;
   const isAuthenticated = await checkAuth();
 
   const nextBuildId = await fetchBuildId();
@@ -27,15 +25,9 @@ export default async function ArticleAnalyzePage({ params }: PageProps) {
   });
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto py-8 px-4 max-w-2xl">
-        <Link
-          href={`/dora-world/contents`}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          <T>Back to List</T>
-        </Link>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto py-6 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8 w-full max-w-[min(65ch,90vw)] lg:max-w-[min(75ch,70vw)] xl:max-w-[min(80ch,60vw)]">
+        <BackToList locale={locale} />
         <article className="mt-4 sm:mt-6 md:mt-8">
           <ReactMarkdown
             components={markdownComponents}
