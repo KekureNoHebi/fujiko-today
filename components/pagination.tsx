@@ -163,7 +163,7 @@ export function Pagination({
         )}
       </Button>
 
-      <div className="flex items-center gap-2 ml-4">
+      <div className="hidden sm:flex items-center gap-2 ml-4">
         <span className="text-sm text-muted-foreground whitespace-nowrap">
           <T>Go to</T>
         </span>

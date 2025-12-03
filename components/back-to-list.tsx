@@ -1,6 +1,6 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { T } from 'gt-next';
@@ -16,45 +16,41 @@ interface NavigationState {
   page: number;
 }
 
-function getNavigationState(): NavigationState | null {
-  if (typeof window === 'undefined') return null;
-
-  try {
-    const saved = sessionStorage.getItem('dora_nav_state');
-    if (!saved) return null;
-    return JSON.parse(saved) as NavigationState;
-  } catch {
-    return null;
-  }
-}
-
-function subscribe() {
-  return () => {};
-}
-
 export function BackToList({
   locale,
   fallbackPath = '/dora-world/contents',
 }: BackToListProps) {
-  const state = useSyncExternalStore(subscribe, getNavigationState, () => null);
+  // Lazy initialization: only runs once on client mount
+  const [backUrl] = useState(() => {
+    // Server-side or initial render
+    if (typeof window === 'undefined') {
+      return `/${locale}${fallbackPath}`;
+    }
 
-  const backUrl = state
-    ? (() => {
-        const { topic, topicId, page } = state;
-        const params = new URLSearchParams();
+    try {
+      const saved = sessionStorage.getItem('dora_nav_state');
+      if (!saved) {
+        return `/${locale}${fallbackPath}`;
+      }
 
-        if (topicId) {
-          params.set('t', topicId);
-        }
+      const state: NavigationState = JSON.parse(saved);
+      const { topic, topicId, page } = state;
+      const params = new URLSearchParams();
 
-        if (page > 1) {
-          params.set('page', page.toString());
-        }
+      if (topicId) {
+        params.set('t', topicId);
+      }
 
-        const query = params.toString();
-        return `/${locale}/dora-world/${topic}${query ? `?${query}` : ''}`;
-      })()
-    : `/${locale}${fallbackPath}`;
+      if (page > 1) {
+        params.set('page', page.toString());
+      }
+
+      const query = params.toString();
+      return `/${locale}/dora-world/${topic}${query ? `?${query}` : ''}`;
+    } catch {
+      return `/${locale}${fallbackPath}`;
+    }
+  });
 
   return (
     <Link
