@@ -448,58 +448,6 @@ export interface paths {
     patch: operations['updateSingleItemsLanguages'];
     trace?: never;
   };
-  '/items/dora_world_contents': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Items
-     * @description List the dora_world_contents items.
-     */
-    get: operations['readItemsDoraWorldContents'];
-    put?: never;
-    /**
-     * Create an Item
-     * @description Create a new dora_world_contents item.
-     */
-    post: operations['createItemsDoraWorldContents'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update Multiple Items
-     * @description Update multiple dora_world_contents items at the same time.
-     */
-    patch: operations['updateItemsDoraWorldContents'];
-    trace?: never;
-  };
-  '/items/dora_world_contents/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Retrieve an Item
-     * @description Retrieve a single dora_world_contents item by unique identifier.
-     */
-    get: operations['readSingleItemsDoraWorldContents'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update an Item
-     * @description Update an existing dora_world_contents item.
-     */
-    patch: operations['updateSingleItemsDoraWorldContents'];
-    trace?: never;
-  };
   '/items/fujiko_museum_contents': {
     parameters: {
       query?: never;
@@ -550,6 +498,58 @@ export interface paths {
      * @description Update an existing fujiko_museum_contents item.
      */
     patch: operations['updateSingleItemsFujikoMuseumContents'];
+    trace?: never;
+  };
+  '/items/dora_world_contents': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Items
+     * @description List the dora_world_contents items.
+     */
+    get: operations['readItemsDoraWorldContents'];
+    put?: never;
+    /**
+     * Create an Item
+     * @description Create a new dora_world_contents item.
+     */
+    post: operations['createItemsDoraWorldContents'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update Multiple Items
+     * @description Update multiple dora_world_contents items at the same time.
+     */
+    patch: operations['updateItemsDoraWorldContents'];
+    trace?: never;
+  };
+  '/items/dora_world_contents/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve an Item
+     * @description Retrieve a single dora_world_contents item by unique identifier.
+     */
+    get: operations['readSingleItemsDoraWorldContents'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update an Item
+     * @description Update an existing dora_world_contents item.
+     */
+    patch: operations['updateSingleItemsDoraWorldContents'];
     trace?: never;
   };
   '/items/works_translations': {
@@ -1484,23 +1484,6 @@ export interface components {
       name?: string | null;
       direction?: string | null;
     };
-    ItemsDoraWorldContents: {
-      id: string;
-      status?: string;
-      sort?: number | null;
-      /** Format: timestamp */
-      date_created?: string | null;
-      /** Format: timestamp */
-      date_updated?: string | null;
-      page_url?: string | null;
-      image_url?: string | null;
-      translations?:
-        | (
-            | number
-            | components['schemas']['ItemsDoraWorldContentsTranslations']
-          )[]
-        | null;
-    };
     ItemsFujikoMuseumContents: {
       id: string;
       status?: string;
@@ -1511,10 +1494,31 @@ export interface components {
       date_updated?: string | null;
       link?: string | null;
       thumbnail?: string | null;
+      /** Format: timestamp */
+      date_published?: string | null;
       translations?:
         | (
             | number
             | components['schemas']['ItemsFujikoMuseumContentsTranslations']
+          )[]
+        | null;
+    };
+    ItemsDoraWorldContents: {
+      id: string;
+      status?: string;
+      sort?: number | null;
+      /** Format: timestamp */
+      date_created?: string | null;
+      /** Format: timestamp */
+      date_updated?: string | null;
+      page_url?: string | null;
+      image_url?: string | null;
+      /** Format: timestamp */
+      date_published?: string | null;
+      translations?:
+        | (
+            | number
+            | components['schemas']['ItemsDoraWorldContentsTranslations']
           )[]
         | null;
     };
@@ -2605,190 +2609,6 @@ export interface operations {
       404: components['responses']['NotFoundError'];
     };
   };
-  readItemsDoraWorldContents: {
-    parameters: {
-      query?: {
-        /** @description Control what fields are being returned in the object. */
-        fields?: components['parameters']['Fields'];
-        /** @description A limit on the number of objects that are returned. */
-        limit?: components['parameters']['Limit'];
-        /** @description What metadata to return in the response. */
-        meta?: components['parameters']['Meta'];
-        /** @description How many items to skip when fetching data. */
-        offset?: components['parameters']['Offset'];
-        /** @description How to sort the returned items. `sort` is a CSV of fields used to sort the fetched items. Sorting defaults to ascending (ASC) order but a minus sign (` - `) can be used to reverse this to descending (DESC) order. Fields are prioritized by their order in the CSV. You can also use a ` ? ` to sort randomly. */
-        sort?: components['parameters']['Sort'];
-        /** @description Select items in collection by given conditions. */
-        filter?: components['parameters']['Filter'];
-        /** @description Filter by items that contain the given search query in one of their fields. */
-        search?: components['parameters']['Search'];
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful request */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContents'][];
-            meta?: components['schemas']['x-metadata'];
-          };
-        };
-      };
-      401: components['responses']['UnauthorizedError'];
-    };
-  };
-  createItemsDoraWorldContents: {
-    parameters: {
-      query?: {
-        /** @description What metadata to return in the response. */
-        meta?: components['parameters']['Meta'];
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        'application/json':
-          | components['schemas']['ItemsDoraWorldContents'][]
-          | components['schemas']['ItemsDoraWorldContents'];
-      };
-    };
-    responses: {
-      /** @description Successful request */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContents'][];
-          };
-        };
-      };
-      401: components['responses']['UnauthorizedError'];
-    };
-  };
-  updateItemsDoraWorldContents: {
-    parameters: {
-      query?: {
-        /** @description Control what fields are being returned in the object. */
-        fields?: components['parameters']['Fields'];
-        /** @description A limit on the number of objects that are returned. */
-        limit?: components['parameters']['Limit'];
-        /** @description What metadata to return in the response. */
-        meta?: components['parameters']['Meta'];
-        /** @description How many items to skip when fetching data. */
-        offset?: components['parameters']['Offset'];
-        /** @description How to sort the returned items. `sort` is a CSV of fields used to sort the fetched items. Sorting defaults to ascending (ASC) order but a minus sign (` - `) can be used to reverse this to descending (DESC) order. Fields are prioritized by their order in the CSV. You can also use a ` ? ` to sort randomly. */
-        sort?: components['parameters']['Sort'];
-        /** @description Select items in collection by given conditions. */
-        filter?: components['parameters']['Filter'];
-        /** @description Filter by items that contain the given search query in one of their fields. */
-        search?: components['parameters']['Search'];
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        'application/json':
-          | components['schemas']['ItemsDoraWorldContents'][]
-          | components['schemas']['ItemsDoraWorldContents'];
-      };
-    };
-    responses: {
-      /** @description Successful request */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContents'][];
-          };
-        };
-      };
-    };
-  };
-  readSingleItemsDoraWorldContents: {
-    parameters: {
-      query?: {
-        /** @description Control what fields are being returned in the object. */
-        fields?: components['parameters']['Fields'];
-        /** @description What metadata to return in the response. */
-        meta?: components['parameters']['Meta'];
-        /** @description Retrieve an item's state from a specific Content Version. The value corresponds to the "key" of the Content Version. */
-        version?: components['parameters']['Version'];
-      };
-      header?: never;
-      path: {
-        /** @description Index of the item. */
-        id: number | string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful request */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContents'];
-          };
-        };
-      };
-      401: components['responses']['UnauthorizedError'];
-      404: components['responses']['NotFoundError'];
-    };
-  };
-  updateSingleItemsDoraWorldContents: {
-    parameters: {
-      query?: {
-        /** @description Control what fields are being returned in the object. */
-        fields?: components['parameters']['Fields'];
-        /** @description What metadata to return in the response. */
-        meta?: components['parameters']['Meta'];
-      };
-      header?: never;
-      path: {
-        /** @description Index of the item. */
-        id: number | string;
-      };
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        'application/json': components['schemas']['ItemsDoraWorldContents'];
-      };
-    };
-    responses: {
-      /** @description Successful request */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            data?: components['schemas']['ItemsDoraWorldContents'];
-          };
-        };
-      };
-      401: components['responses']['UnauthorizedError'];
-      404: components['responses']['NotFoundError'];
-    };
-  };
   readItemsFujikoMuseumContents: {
     parameters: {
       query?: {
@@ -2966,6 +2786,190 @@ export interface operations {
         content: {
           'application/json': {
             data?: components['schemas']['ItemsFujikoMuseumContents'];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+      404: components['responses']['NotFoundError'];
+    };
+  };
+  readItemsDoraWorldContents: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description A limit on the number of objects that are returned. */
+        limit?: components['parameters']['Limit'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+        /** @description How many items to skip when fetching data. */
+        offset?: components['parameters']['Offset'];
+        /** @description How to sort the returned items. `sort` is a CSV of fields used to sort the fetched items. Sorting defaults to ascending (ASC) order but a minus sign (` - `) can be used to reverse this to descending (DESC) order. Fields are prioritized by their order in the CSV. You can also use a ` ? ` to sort randomly. */
+        sort?: components['parameters']['Sort'];
+        /** @description Select items in collection by given conditions. */
+        filter?: components['parameters']['Filter'];
+        /** @description Filter by items that contain the given search query in one of their fields. */
+        search?: components['parameters']['Search'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsDoraWorldContents'][];
+            meta?: components['schemas']['x-metadata'];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+    };
+  };
+  createItemsDoraWorldContents: {
+    parameters: {
+      query?: {
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json':
+          | components['schemas']['ItemsDoraWorldContents'][]
+          | components['schemas']['ItemsDoraWorldContents'];
+      };
+    };
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsDoraWorldContents'][];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+    };
+  };
+  updateItemsDoraWorldContents: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description A limit on the number of objects that are returned. */
+        limit?: components['parameters']['Limit'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+        /** @description How many items to skip when fetching data. */
+        offset?: components['parameters']['Offset'];
+        /** @description How to sort the returned items. `sort` is a CSV of fields used to sort the fetched items. Sorting defaults to ascending (ASC) order but a minus sign (` - `) can be used to reverse this to descending (DESC) order. Fields are prioritized by their order in the CSV. You can also use a ` ? ` to sort randomly. */
+        sort?: components['parameters']['Sort'];
+        /** @description Select items in collection by given conditions. */
+        filter?: components['parameters']['Filter'];
+        /** @description Filter by items that contain the given search query in one of their fields. */
+        search?: components['parameters']['Search'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json':
+          | components['schemas']['ItemsDoraWorldContents'][]
+          | components['schemas']['ItemsDoraWorldContents'];
+      };
+    };
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsDoraWorldContents'][];
+          };
+        };
+      };
+    };
+  };
+  readSingleItemsDoraWorldContents: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+        /** @description Retrieve an item's state from a specific Content Version. The value corresponds to the "key" of the Content Version. */
+        version?: components['parameters']['Version'];
+      };
+      header?: never;
+      path: {
+        /** @description Index of the item. */
+        id: number | string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsDoraWorldContents'];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+      404: components['responses']['NotFoundError'];
+    };
+  };
+  updateSingleItemsDoraWorldContents: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+      };
+      header?: never;
+      path: {
+        /** @description Index of the item. */
+        id: number | string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['ItemsDoraWorldContents'];
+      };
+    };
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsDoraWorldContents'];
           };
         };
       };

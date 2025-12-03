@@ -60,7 +60,7 @@ export async function fetchPostsFromDirectus({
         filter: JSON.stringify({
           status: { _eq: 'published' },
         }),
-        sort: ['-date_updated'],
+        sort: ['-date_published'],
       },
     },
   });
