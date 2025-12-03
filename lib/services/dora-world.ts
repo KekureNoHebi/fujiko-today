@@ -69,20 +69,25 @@ export async function fetchContents({
   nextBuildId,
   topic,
   topicId,
+  page = 1,
 }: {
   nextBuildId: string;
   topic: string;
   topicId?: string;
+  page?: number;
 }) {
-  const topicIdParam = topicId ? `?t=${topicId}` : '';
-  const dataResponse = await fetch(
-    `${BASE_URL}/_next/data/${nextBuildId}/${topic}.json${topicIdParam}`,
-    {
-      next: {
-        revalidate: 60,
-      },
+  const params = new URLSearchParams();
+  if (topicId) params.append('t', topicId);
+  if (page && page > 1) params.append('page', page.toString());
+
+  const queryString = params.toString();
+  const url = `${BASE_URL}/_next/data/${nextBuildId}/${topic}.json${queryString ? `?${queryString}` : ''}`;
+
+  const dataResponse = await fetch(url, {
+    next: {
+      revalidate: 60,
     },
-  );
+  });
   const data: ContentsResponse = await dataResponse.json();
   return data;
 }
