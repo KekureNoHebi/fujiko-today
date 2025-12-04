@@ -45,6 +45,9 @@ const notoSansJP = Noto_Sans_JP({
 export const metadata: Metadata = {
   title: 'Fujiko Today',
   description: 'Fujiko Today',
+  appleWebApp: {
+    title: 'Fujiko Today',
+  },
 };
 
 export default async function RootLayout({

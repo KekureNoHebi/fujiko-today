@@ -38,7 +38,7 @@ export const markdownComponents: Components = {
         <img
           src={src}
           alt={alt || ''}
-          className="rounded-lg shadow-lg border border-border/50 max-w-full h-auto mx-auto"
+          className="rounded-sm shadow-lg max-w-full h-auto mx-auto"
           loading="lazy"
         />
       </span>

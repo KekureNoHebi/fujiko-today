@@ -6,13 +6,11 @@ export default function Home() {
   const menuItems = [
     {
       title: 'ドラえもんチャンネル',
-      description: 'Doraemon Channel',
       href: '/dora-world/contents',
       iconUrl: 'https://dora-world.com/assets/images/favicon.ico',
     },
     {
       title: '川崎市 藤子・F・不二雄ミュージアム',
-      description: 'Kawasaki City Fujiko・F・Fujio Museum',
       href: '/fujiko-museum/blog',
       iconUrl: 'https://fujiko-museum.com/webclip.png',
     },
@@ -25,9 +23,9 @@ export default function Home() {
           <Link
             key={item.title}
             href={item.href}
-            className="group relative flex flex-col gap-4 rounded-lg border bg-card p-6 md:p-8 shadow-sm transition-all hover:shadow-md hover:border-primary/50"
+            className="group relative flex flex-col gap-4 rounded-lg border bg-card p-6 md:p-8 shadow-sm transition-all hover:shadow-md hover:border-primary/50 h-full"
           >
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4 min-h-16">
               <div className="shrink-0">
                 <Image
                   src={item.iconUrl}
@@ -41,9 +39,6 @@ export default function Home() {
                 <h2 className="text-xl md:text-2xl font-semibold mb-2 group-hover:text-primary transition-colors">
                   {item.title}
                 </h2>
-                <p className="text-sm text-muted-foreground">
-                  {item.description}
-                </p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm font-medium text-primary">
