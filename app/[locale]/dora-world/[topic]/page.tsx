@@ -57,11 +57,14 @@ export default async function DoraWorldListPage({
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20">
-      <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <header className="mb-10">
+      <div className="container mx-auto">
+        <header className="mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            {topic.charAt(0).toUpperCase() + topic.slice(1)}
+            Doraemon Channel
           </h1>
+          <p className="text-lg sm:text-xl text-muted-foreground mt-2">
+            {topic.charAt(0).toUpperCase() + topic.slice(1)}
+          </p>
         </header>
 
         {result.contents.length === 0 ? (

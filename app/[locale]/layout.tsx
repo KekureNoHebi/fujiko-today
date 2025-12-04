@@ -74,7 +74,9 @@ export default async function RootLayout({
                 </div>
                 <LocaleSelector />
               </header>
-              <main className="flex-1 p-6">{children}</main>
+              <main className="flex-1 py-4 sm:py-6 md:py-8 px-4 sm:px-6">
+                {children}
+              </main>
             </div>
           </SidebarProvider>
         </GTProvider>

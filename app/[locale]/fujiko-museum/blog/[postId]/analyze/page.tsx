@@ -43,9 +43,9 @@ export default async function PostDetailPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto py-6 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8 w-full max-w-[min(65ch,90vw)] lg:max-w-[min(75ch,70vw)] xl:max-w-[min(80ch,60vw)]">
+      <div className="mx-auto w-full max-w-[min(65ch,calc(100vw-2rem))] sm:max-w-[min(70ch,calc(100vw-3rem))] lg:max-w-[min(75ch,calc(100vw-4rem))]">
         <BackToList locale={locale} basePath="fujiko-museum/blog" />
-        <article className="mt-4 sm:mt-6 md:mt-8">
+        <article className="mt-3 sm:mt-4 md:mt-6">
           <ReactMarkdown
             components={markdownComponents}
             remarkPlugins={[remarkBreaks]}
@@ -53,7 +53,7 @@ export default async function PostDetailPage({ params }: PageProps) {
             {markdown}
           </ReactMarkdown>
         </article>
-        <div className="mt-12 pt-8 border-t border-border">
+        <div className="mt-8 sm:mt-10 md:mt-12 pt-6 sm:pt-8 border-t border-border">
           {isAuthenticated ? (
             <TermAnalyzer content={markdown} />
           ) : (

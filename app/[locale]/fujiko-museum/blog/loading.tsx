@@ -13,7 +13,7 @@ function ArticleCardSkeleton() {
 export default function Loading() {
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20">
-      <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto">
         <header className="mb-10">
           <Skeleton className="h-9 sm:h-10 w-64" />
         </header>

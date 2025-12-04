@@ -44,10 +44,10 @@ export function BackToList({ locale, basePath }: BackToListProps) {
   return (
     <Link
       href={backUrl}
-      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group mt-2 sm:mt-3"
     >
       <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-      <T>Back to List</T>
+      <T>Back</T>
     </Link>
   );
 }

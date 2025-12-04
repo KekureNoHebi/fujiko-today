@@ -35,17 +35,17 @@ export const markdownComponents: Components = {
   img: ({ src, alt }) => {
     if (!src || typeof src !== 'string') return null;
     return (
-      <span className="block my-6 sm:my-8 -mx-4 sm:mx-0">
+      <span className="block my-6 sm:my-8">
         <Image
           src={src}
           alt={alt || ''}
           width={800}
           height={450}
-          className="sm:rounded-lg shadow-lg border-y sm:border border-border/50 w-full h-auto"
+          className="rounded-lg shadow-lg border border-border/50 w-full h-auto"
           unoptimized
         />
         {alt && (
-          <span className="block text-center text-xs sm:text-sm text-muted-foreground mt-2 sm:mt-3 px-4 sm:px-0">
+          <span className="block text-center text-xs sm:text-sm text-muted-foreground mt-2 sm:mt-3">
             {alt}
           </span>
         )}
@@ -88,13 +88,11 @@ export const markdownComponents: Components = {
     );
   },
   pre: ({ children }) => (
-    <pre className="my-5 sm:my-6 overflow-hidden rounded-lg -mx-4 sm:mx-0">
-      {children}
-    </pre>
+    <pre className="my-5 sm:my-6 overflow-hidden rounded-lg">{children}</pre>
   ),
   hr: () => <hr className="my-6 sm:my-8 border-border" />,
   table: ({ children }) => (
-    <div className="my-5 sm:my-6 overflow-x-auto rounded-lg border border-border -mx-4 sm:mx-0">
+    <div className="my-5 sm:my-6 overflow-x-auto rounded-lg border border-border">
       <table className="w-full text-sm">{children}</table>
     </div>
   ),

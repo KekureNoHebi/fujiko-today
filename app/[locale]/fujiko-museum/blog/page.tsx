@@ -36,8 +36,8 @@ export default async function FujikoMuseumListPage({
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20">
-      <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <header className="mb-10">
+      <div className="container mx-auto">
+        <header className="mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
             Kawasaki City Fujiko・F・Fujio Museum
           </h1>
