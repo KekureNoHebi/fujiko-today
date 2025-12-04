@@ -39,7 +39,7 @@ export default async function FujikoMuseumListPage({
       <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <header className="mb-10">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            <T>Blog</T>
+            Kawasaki City Fujiko・F・Fujio Museum
           </h1>
         </header>
 

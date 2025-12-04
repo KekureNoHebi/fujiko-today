@@ -1,24 +1,14 @@
-import { LocaleSelector } from 'gt-next';
-import Link from 'next/link';
+import { Wrench } from 'lucide-react';
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-center gap-8 py-32 px-16 bg-white dark:bg-black">
-        <LocaleSelector />
-        <Link
-          className="flex h-12 items-center justify-center rounded-full bg-foreground px-8 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
-          href="/dora-world/contents"
-        >
-          ドラえもんチャンネル
-        </Link>
-        <Link
-          className="flex h-12 items-center justify-center rounded-full bg-foreground px-8 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
-          href="/fujiko-museum/blog"
-        >
-          川崎市 藤子・F・不二雄ミュージアム
-        </Link>
-      </main>
+    <div className="flex flex-col items-center justify-center gap-8 py-16">
+      <div className="flex flex-col items-center gap-4">
+        <Wrench className="h-16 w-16 text-gray-400" />
+        <h1 className="text-4xl font-bold text-center">
+          🚧 Under Construction
+        </h1>
+      </div>
     </div>
   );
 }

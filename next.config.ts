@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'contents.dora-world.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'dora-world.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'fujiko-museum.com',
+      },
     ],
   },
 };

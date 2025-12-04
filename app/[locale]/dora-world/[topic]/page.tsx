@@ -60,7 +60,7 @@ export default async function DoraWorldListPage({
       <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <header className="mb-10">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            <T>Articles</T>
+            {topic.charAt(0).toUpperCase() + topic.slice(1)}
           </h1>
         </header>
 
