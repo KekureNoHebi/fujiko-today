@@ -16,12 +16,6 @@ interface PageProps {
   }>;
 }
 
-export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  return [];
-}
-
 export default async function PostDetailPage({ params }: PageProps) {
   const { postId, locale } = await params;
   const isAuthenticated = await checkAuth();

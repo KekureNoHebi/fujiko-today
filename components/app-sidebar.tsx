@@ -11,10 +11,12 @@ import {
   SidebarMenuButton,
   SidebarGroup,
   SidebarGroupContent,
+  useSidebar,
 } from '@/components/ui/sidebar';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const menuItems = [
     {
@@ -48,6 +50,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <Link
                         href={item.href}
                         className="flex items-center gap-2"
+                        onClick={() => {
+                          if (isMobile) {
+                            setOpenMobile(false);
+                          }
+                        }}
                       >
                         <Image
                           src={item.iconUrl}
