@@ -41,7 +41,10 @@ export default async function PostDetailPage({ params }: PageProps) {
         <BackToList locale={locale} basePath="fujiko-museum/blog" />
         <article className="mt-3 sm:mt-4 md:mt-6">
           <ReactMarkdown
-            components={markdownComponents}
+            components={{
+              ...markdownComponents,
+              img: () => <></>,
+            }}
             remarkPlugins={[remarkBreaks]}
           >
             {markdown}

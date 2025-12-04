@@ -1,11 +1,11 @@
 import { getContent, fetchBuildId } from '@/lib/services/dora-world';
 import ReactMarkdown from 'react-markdown';
-import { markdownComponents } from '@/lib/markdown-components';
 import { TermAnalyzer } from '@/components/term-analyzer';
 import { LoginForm } from '@/components/login-form';
 import { checkAuth } from '@/lib/auth';
 import remarkBreaks from 'remark-breaks';
 import { BackToList } from '@/components/back-to-list';
+import { markdownComponents } from '@/lib/markdown-components';
 
 interface PageProps {
   params: Promise<{
@@ -30,7 +30,10 @@ export default async function ArticleAnalyzePage({ params }: PageProps) {
         <BackToList locale={locale} basePath="dora-world/contents" />
         <article className="mt-3 sm:mt-4 md:mt-6">
           <ReactMarkdown
-            components={markdownComponents}
+            components={{
+              ...markdownComponents,
+              img: () => <></>,
+            }}
             remarkPlugins={[remarkBreaks]}
           >
             {markdown}
