@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, CheckCircle2, Circle, Copy, Check } from 'lucide-react';
-import { TranslateTermsDialog } from '@/components/translate-terms-dialog';
+import { TranslateTermsDialog } from '@/components/term/translate-terms-dialog';
 import type { Term, DirectusTerm, AnalysisResult } from '@/lib/types/term';
 import { typeColors, typeLabels } from '@/lib/constants/term';
 import { replaceTermsWithPlaceholders } from '@/lib/services/translation/replace-terms';

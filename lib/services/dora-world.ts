@@ -9,6 +9,7 @@ import {
   replacePlaceholders,
   createTurndownService,
 } from '@/lib/utils/content-helpers';
+import { fetchMarkdownFromConfiguredRepo } from '@/lib/services/github-api';
 
 const BASE_URL = 'https://www.dora-world.com';
 const turndownService = createTurndownService(BASE_URL);
@@ -216,63 +217,60 @@ export async function getContentWithFallback({
   markdown: string;
   translationRequests?: TriggerContentTranslationParams[];
 }> {
-  const basePath = `/fujiko-today/dora-world/contents/${contentId}`;
-  const remoteUrl = `${process.env.CONTENTS_URL}/d${basePath}/${locale}/content.md`;
-  const jaUrl = `${process.env.CONTENTS_URL}/d${basePath}/ja/content.md`;
+  const basePath = `/dora-world/contents/${contentId}`;
 
   let markdown: string;
   const translationRequests: TriggerContentTranslationParams[] = [];
 
   try {
-    const response = await fetch(remoteUrl);
+    markdown = await fetchMarkdownFromConfiguredRepo(
+      `${basePath}/${locale}/content.md`,
+    );
 
-    if (response.ok) {
-      markdown = await response.text();
-      const termsData = await fetchDirectusTerms(locale);
-
-      markdown = replacePlaceholders(markdown, termsData);
-    } else {
-      const jaResponse = await fetch(jaUrl);
-      if (jaResponse.ok) {
-        markdown = await jaResponse.text();
-        const termsData = await fetchDirectusTerms('ja');
-        markdown = replacePlaceholders(markdown, termsData);
-        translationRequests.push({
-          text: markdown,
-          targetLanguage: locale as LanguageCode,
-          sourceLanguage: 'ja',
-          uploadPath: `${basePath}/${locale}/content.md`,
-          revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
-          idempotencyKey: `dora-world-${contentId}-${locale}`,
-          idempotencyKeyTTL: '60s',
-        });
-      } else {
-        throw new Error(
-          'Content not found in both target and Japanese locales',
-        );
-      }
-    }
+    const termsData = await fetchDirectusTerms(locale);
+    markdown = replacePlaceholders(markdown, termsData);
   } catch {
-    markdown = await getContent({ nextBuildId, contentId });
-    translationRequests.push({
-      text: markdown,
-      targetLanguage: locale as LanguageCode,
-      sourceLanguage: 'ja',
-      uploadPath: `${basePath}/${locale}/content.md`,
-      revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
-      idempotencyKey: `dora-world-${contentId}-${locale}`,
-      idempotencyKeyTTL: '60s',
-    });
-    if (locale !== 'ja') {
-      translationRequests.push({
-        text: markdown,
-        targetLanguage: 'ja',
-        sourceLanguage: 'ja',
-        uploadPath: `${basePath}/ja/content.md`,
-        revalidatePath: `/ja/dora-world/contents/${contentId}`,
-        idempotencyKey: `dora-world-${contentId}-ja`,
-        idempotencyKeyTTL: '60s',
-      });
+    try {
+      markdown = await fetchMarkdownFromConfiguredRepo(
+        `${basePath}/ja/content.md`,
+      );
+
+      const termsData = await fetchDirectusTerms('ja');
+      markdown = replacePlaceholders(markdown, termsData);
+
+      // translationRequests.push({
+      //   text: markdown,
+      //   targetLanguage: locale as LanguageCode,
+      //   sourceLanguage: 'ja',
+      //   uploadPath: `${basePath}/${locale}/content.md`,
+      //   revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
+      //   idempotencyKey: `dora-world-${contentId}-${locale}`,
+      //   idempotencyKeyTTL: '60s',
+      // });
+    } catch {
+      markdown = await getContent({ nextBuildId, contentId });
+
+      // translationRequests.push({
+      //   text: markdown,
+      //   targetLanguage: locale as LanguageCode,
+      //   sourceLanguage: 'ja',
+      //   uploadPath: `${basePath}/${locale}/content.md`,
+      //   revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
+      //   idempotencyKey: `dora-world-${contentId}-${locale}`,
+      //   idempotencyKeyTTL: '60s',
+      // });
+
+      if (locale !== 'ja') {
+        // translationRequests.push({
+        //   text: markdown,
+        //   targetLanguage: 'ja',
+        //   sourceLanguage: 'ja',
+        //   uploadPath: `${basePath}/ja/content.md`,
+        //   revalidatePath: `/ja/dora-world/contents/${contentId}`,
+        //   idempotencyKey: `dora-world-${contentId}-ja`,
+        //   idempotencyKeyTTL: '60s',
+        // });
+      }
     }
   }
 

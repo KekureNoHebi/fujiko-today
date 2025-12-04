@@ -1,8 +1,8 @@
 import { getPostWithFallback } from '@/lib/services/fujiko-museum';
-import { ArticleContent } from '@/components/article-content';
+import { ArticleContent } from '@/components/article/article-content';
 import { triggerContentTranslationAction } from '@/lib/actions/translate';
 import { after } from 'next/server';
-import { BackToList } from '@/components/back-to-list';
+import { BackToList } from '@/components/navigation/back-to-list';
 
 interface PageProps {
   params: Promise<{

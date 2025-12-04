@@ -1,9 +1,7 @@
-import { getPostWithFallback } from '@/lib/services/fujiko-museum';
-import { triggerContentTranslationAction } from '@/lib/actions/translate';
-import { after } from 'next/server';
-import { BackToList } from '@/components/back-to-list';
-import { TermAnalyzer } from '@/components/term-analyzer';
-import { LoginForm } from '@/components/login-form';
+import { getPost } from '@/lib/services/fujiko-museum';
+import { BackToList } from '@/components/navigation/back-to-list';
+import { TermAnalyzer } from '@/components/term/term-analyzer';
+import { LoginForm } from '@/components/auth/login-form';
 import { checkAuth } from '@/lib/auth';
 import ReactMarkdown from 'react-markdown';
 import { markdownComponents } from '@/lib/markdown-components';
@@ -20,20 +18,9 @@ export default async function PostDetailPage({ params }: PageProps) {
   const { postId, locale } = await params;
   const isAuthenticated = await checkAuth();
 
-  const { markdown, translationRequests } = await getPostWithFallback({
+  const markdown = await getPost({
     postId: Number(postId),
-    locale,
   });
-
-  if (translationRequests) {
-    after(async () => {
-      await Promise.all(
-        translationRequests.map((translationRequest) =>
-          triggerContentTranslationAction(translationRequest),
-        ),
-      );
-    });
-  }
 
   return (
     <div className="min-h-screen bg-background">

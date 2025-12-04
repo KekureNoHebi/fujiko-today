@@ -3,8 +3,8 @@ import {
   fetchContents,
   fetchContentsFromDirectus,
 } from '@/lib/services/dora-world';
-import { ArticleCard } from '@/components/article-card';
-import { Pagination } from '@/components/pagination';
+import { ArticleCard } from '@/components/article/article-card';
+import { Pagination } from '@/components/navigation/pagination';
 import { T } from 'gt-next';
 import { checkAuth } from '@/lib/auth';
 import { PaginatedContentsResponse } from '@/lib/types/content';
@@ -30,7 +30,7 @@ export default async function DoraWorldListPage({
   const currentPage = pageParam ? parseInt(pageParam, 10) : 1;
 
   let result: PaginatedContentsResponse;
-  if (topic === 'contents' && !topicId && currentPage === 1) {
+  if (topic === 'contents' && !topicId && currentPage !== 1) {
     result = await fetchContentsFromDirectus({
       locale,
       page: currentPage,

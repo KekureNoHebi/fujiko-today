@@ -2,7 +2,7 @@ import { logger, schemaTask } from '@trigger.dev/sdk/v3';
 import { translateContent } from '@/lib/services/translation/translate';
 import { fetchDirectusTerms } from '@/lib/services/directus-terms';
 import { replaceTermsWithPlaceholders } from '@/lib/services/translation/replace-terms';
-import { uploadMarkdownWithEnv } from '@/lib/services/open-list';
+import { updateFileOnConfiguredRepo } from '@/lib/services/github-api';
 import { translateContentSchema } from '@/lib/schemas/translate-content';
 import { languageNames } from '@/lib/constants/term';
 
@@ -53,11 +53,15 @@ export const translateContentTask = schemaTask({
     });
 
     if (payload.uploadPath) {
-      logger.log('Uploading translated content', {
+      logger.log('Uploading translated content to GitHub', {
         uploadPath: payload.uploadPath,
       });
       try {
-        await uploadMarkdownWithEnv(translatedText, payload.uploadPath);
+        await updateFileOnConfiguredRepo(
+          payload.uploadPath,
+          translatedText,
+          `Update: ${payload.uploadPath} (${payload.targetLanguage})`,
+        );
         logger.log('Upload completed', {
           uploadPath: payload.uploadPath,
         });

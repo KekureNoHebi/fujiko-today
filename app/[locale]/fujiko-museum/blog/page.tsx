@@ -2,8 +2,8 @@ import {
   fetchPostsFromDirectus,
   fetchPostsAsPaginatedContents,
 } from '@/lib/services/fujiko-museum';
-import { ArticleCard } from '@/components/article-card';
-import { Pagination } from '@/components/pagination';
+import { ArticleCard } from '@/components/article/article-card';
+import { Pagination } from '@/components/navigation/pagination';
 import { T } from 'gt-next';
 import { checkAuth } from '@/lib/auth';
 

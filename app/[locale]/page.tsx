@@ -23,9 +23,9 @@ export default function Home() {
           <Link
             key={item.title}
             href={item.href}
-            className="group relative flex flex-col gap-4 rounded-lg border bg-card p-6 md:p-8 shadow-sm transition-all hover:shadow-md hover:border-primary/50 h-full"
+            className="group relative flex flex-col gap-4 rounded-lg border bg-card p-6 md:p-8 shadow-sm transition-all hover:shadow-md hover:border-primary/50 md:h-full justify-between"
           >
-            <div className="flex items-start gap-4 min-h-16">
+            <div className="flex items-start gap-4 min-h-10">
               <div className="shrink-0">
                 <Image
                   src={item.iconUrl}

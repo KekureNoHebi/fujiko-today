@@ -9,6 +9,7 @@ import {
   replacePlaceholders,
   createTurndownService,
 } from '@/lib/utils/content-helpers';
+import { fetchMarkdownFromConfiguredRepo } from '@/lib/services/github-api';
 
 const BASE_URL = 'https://fujiko-museum.com';
 const API_URL = `${BASE_URL}/wp-json/wp/v2`;
@@ -200,63 +201,60 @@ export async function getPostWithFallback({
   markdown: string;
   translationRequests?: TriggerContentTranslationParams[];
 }> {
-  const basePath = `/fujiko-today/fujiko-museum/blog/${postId}`;
-  const remoteUrl = `${process.env.CONTENTS_URL}/d${basePath}/${locale}/content.md`;
-  const jaUrl = `${process.env.CONTENTS_URL}/d${basePath}/ja/content.md`;
+  const basePath = `/fujiko-museum/blog/${postId}`;
 
   let markdown: string;
   const translationRequests: TriggerContentTranslationParams[] = [];
 
   try {
-    const response = await fetch(remoteUrl);
+    markdown = await fetchMarkdownFromConfiguredRepo(
+      `${basePath}/${locale}/content.md`,
+    );
 
-    if (response.ok) {
-      markdown = await response.text();
-      const termsData = await fetchDirectusTerms(locale);
-
-      markdown = replacePlaceholders(markdown, termsData);
-    } else {
-      const jaResponse = await fetch(jaUrl);
-      if (jaResponse.ok) {
-        markdown = await jaResponse.text();
-        const termsData = await fetchDirectusTerms('ja');
-        markdown = replacePlaceholders(markdown, termsData);
-        translationRequests.push({
-          text: markdown,
-          targetLanguage: locale as LanguageCode,
-          sourceLanguage: 'ja',
-          uploadPath: `${basePath}/${locale}/content.md`,
-          revalidatePath: `/${locale}/fujiko-museum/blog/${postId}`,
-          idempotencyKey: `fujiko-museum-${postId}-${locale}`,
-          idempotencyKeyTTL: '60s',
-        });
-      } else {
-        throw new Error(
-          'Content not found in both target and Japanese locales',
-        );
-      }
-    }
+    const termsData = await fetchDirectusTerms(locale);
+    markdown = replacePlaceholders(markdown, termsData);
   } catch {
-    markdown = await getPost({ postId });
-    translationRequests.push({
-      text: markdown,
-      targetLanguage: locale as LanguageCode,
-      sourceLanguage: 'ja',
-      uploadPath: `${basePath}/${locale}/content.md`,
-      revalidatePath: `/${locale}/fujiko-museum/blog/${postId}`,
-      idempotencyKey: `fujiko-museum-${postId}-${locale}`,
-      idempotencyKeyTTL: '60s',
-    });
-    if (locale !== 'ja') {
-      translationRequests.push({
-        text: markdown,
-        targetLanguage: 'ja',
-        sourceLanguage: 'ja',
-        uploadPath: `${basePath}/ja/content.md`,
-        revalidatePath: `/ja/fujiko-museum/blog/${postId}`,
-        idempotencyKey: `fujiko-museum-${postId}-ja`,
-        idempotencyKeyTTL: '60s',
-      });
+    try {
+      markdown = await fetchMarkdownFromConfiguredRepo(
+        `${basePath}/ja/content.md`,
+      );
+
+      const termsData = await fetchDirectusTerms('ja');
+      markdown = replacePlaceholders(markdown, termsData);
+
+      // translationRequests.push({
+      //   text: markdown,
+      //   targetLanguage: locale as LanguageCode,
+      //   sourceLanguage: 'ja',
+      //   uploadPath: `${basePath}/${locale}/content.md`,
+      //   revalidatePath: `/${locale}/fujiko-museum/blog/${postId}`,
+      //   idempotencyKey: `fujiko-museum-${postId}-${locale}`,
+      //   idempotencyKeyTTL: '60s',
+      // });
+    } catch {
+      markdown = await getPost({ postId });
+
+      // translationRequests.push({
+      //   text: markdown,
+      //   targetLanguage: locale as LanguageCode,
+      //   sourceLanguage: 'ja',
+      //   uploadPath: `${basePath}/${locale}/content.md`,
+      //   revalidatePath: `/${locale}/fujiko-museum/blog/${postId}`,
+      //   idempotencyKey: `fujiko-museum-${postId}-${locale}`,
+      //   idempotencyKeyTTL: '60s',
+      // });
+
+      if (locale !== 'ja') {
+        // translationRequests.push({
+        //   text: markdown,
+        //   targetLanguage: 'ja',
+        //   sourceLanguage: 'ja',
+        //   uploadPath: `${basePath}/ja/content.md`,
+        //   revalidatePath: `/ja/fujiko-museum/blog/${postId}`,
+        //   idempotencyKey: `fujiko-museum-${postId}-ja`,
+        //   idempotencyKeyTTL: '60s',
+        // });
+      }
     }
   }
 

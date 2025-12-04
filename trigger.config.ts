@@ -12,8 +12,8 @@ export default defineConfig({
     enabledInDev: true,
     default: {
       maxAttempts: 3,
-      minTimeoutInMs: 1000,
-      maxTimeoutInMs: 10000,
+      minTimeoutInMs: 60000,
+      maxTimeoutInMs: 180000,
       factor: 2,
       randomize: true,
     },

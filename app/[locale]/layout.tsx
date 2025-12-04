@@ -11,8 +11,9 @@ import { GTProvider } from 'gt-next';
 import { Toaster } from 'sonner';
 import Link from 'next/link';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/app-sidebar';
-import LocaleSelector from '@/components/locale-selector';
+import { AppSidebar } from '@/components/layout/app-sidebar';
+import LocaleSelector from '@/components/layout/locale-selector';
+import { ScrollToTop } from '@/components/navigation/scroll-to-top';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -84,6 +85,7 @@ export default async function RootLayout({
           </SidebarProvider>
         </GTProvider>
         <Toaster />
+        <ScrollToTop />
       </body>
     </html>
   );

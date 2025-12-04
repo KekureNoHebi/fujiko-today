@@ -1,10 +1,10 @@
 import { getContent, fetchBuildId } from '@/lib/services/dora-world';
 import ReactMarkdown from 'react-markdown';
-import { TermAnalyzer } from '@/components/term-analyzer';
-import { LoginForm } from '@/components/login-form';
+import { TermAnalyzer } from '@/components/term/term-analyzer';
+import { LoginForm } from '@/components/auth/login-form';
 import { checkAuth } from '@/lib/auth';
 import remarkBreaks from 'remark-breaks';
-import { BackToList } from '@/components/back-to-list';
+import { BackToList } from '@/components/navigation/back-to-list';
 import { markdownComponents } from '@/lib/markdown-components';
 
 interface PageProps {
