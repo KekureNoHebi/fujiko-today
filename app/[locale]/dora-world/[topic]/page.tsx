@@ -30,7 +30,7 @@ export default async function DoraWorldListPage({
   const currentPage = pageParam ? parseInt(pageParam, 10) : 1;
 
   let result: PaginatedContentsResponse;
-  if (topic === 'contents' && !topicId) {
+  if ((topic === 'contents' && !topicId) || currentPage > 1) {
     result = await fetchContentsFromDirectus({
       locale,
       page: currentPage,

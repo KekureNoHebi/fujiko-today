@@ -1,5 +1,4 @@
 import type { Components } from 'react-markdown';
-import Image from 'next/image';
 
 export const markdownComponents: Components = {
   h1: ({ children }) => (
@@ -36,19 +35,12 @@ export const markdownComponents: Components = {
     if (!src || typeof src !== 'string') return null;
     return (
       <span className="block my-6 sm:my-8">
-        <Image
+        <img
           src={src}
           alt={alt || ''}
-          width={800}
-          height={450}
-          className="rounded-lg shadow-lg border border-border/50 w-full h-auto"
-          unoptimized
+          className="rounded-lg shadow-lg border border-border/50 max-w-full h-auto mx-auto"
+          loading="lazy"
         />
-        {alt && (
-          <span className="block text-center text-xs sm:text-sm text-muted-foreground mt-2 sm:mt-3">
-            {alt}
-          </span>
-        )}
       </span>
     );
   },

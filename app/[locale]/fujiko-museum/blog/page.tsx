@@ -1,4 +1,7 @@
-import { fetchPostsFromDirectus } from '@/lib/services/fujiko-museum';
+import {
+  fetchPostsFromDirectus,
+  fetchPostsAsPaginatedContents,
+} from '@/lib/services/fujiko-museum';
 import { ArticleCard } from '@/components/article-card';
 import { Pagination } from '@/components/pagination';
 import { T } from 'gt-next';
@@ -22,11 +25,17 @@ export default async function FujikoMuseumListPage({
   const isLoggedIn = await checkAuth();
   const currentPage = pageParam ? parseInt(pageParam, 10) : 1;
 
-  const result = await fetchPostsFromDirectus({
-    locale,
-    page: currentPage,
-    limit: 30,
-  });
+  const result =
+    currentPage === 1
+      ? await fetchPostsAsPaginatedContents({
+          page: currentPage,
+          perPage: 30,
+        })
+      : await fetchPostsFromDirectus({
+          locale,
+          page: currentPage,
+          limit: 30,
+        });
 
   const basePath = `/${locale}/fujiko-museum/blog`;
 
