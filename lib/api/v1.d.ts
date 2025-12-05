@@ -1176,6 +1176,110 @@ export interface paths {
     patch: operations['updateSingleItemsPagesTranslations'];
     trace?: never;
   };
+  '/items/movies': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Items
+     * @description List the movies items.
+     */
+    get: operations['readItemsMovies'];
+    put?: never;
+    /**
+     * Create an Item
+     * @description Create a new movies item.
+     */
+    post: operations['createItemsMovies'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update Multiple Items
+     * @description Update multiple movies items at the same time.
+     */
+    patch: operations['updateItemsMovies'];
+    trace?: never;
+  };
+  '/items/movies/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve an Item
+     * @description Retrieve a single movies item by unique identifier.
+     */
+    get: operations['readSingleItemsMovies'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update an Item
+     * @description Update an existing movies item.
+     */
+    patch: operations['updateSingleItemsMovies'];
+    trace?: never;
+  };
+  '/items/movies_translations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Items
+     * @description List the movies_translations items.
+     */
+    get: operations['readItemsMoviesTranslations'];
+    put?: never;
+    /**
+     * Create an Item
+     * @description Create a new movies_translations item.
+     */
+    post: operations['createItemsMoviesTranslations'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update Multiple Items
+     * @description Update multiple movies_translations items at the same time.
+     */
+    patch: operations['updateItemsMoviesTranslations'];
+    trace?: never;
+  };
+  '/items/movies_translations/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve an Item
+     * @description Retrieve a single movies_translations item by unique identifier.
+     */
+    get: operations['readSingleItemsMoviesTranslations'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update an Item
+     * @description Update an existing movies_translations item.
+     */
+    patch: operations['updateSingleItemsMoviesTranslations'];
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1650,6 +1754,26 @@ export interface components {
     ItemsPagesTranslations: {
       id?: number;
       pages_id?: (string | components['schemas']['ItemsPages']) | null;
+      languages_code?:
+        | (string | components['schemas']['ItemsLanguages'])
+        | null;
+      name?: string | null;
+    };
+    ItemsMovies: {
+      id: string;
+      status?: string;
+      sort?: number | null;
+      /** Format: timestamp */
+      date_created?: string | null;
+      /** Format: timestamp */
+      date_updated?: string | null;
+      translations?:
+        | (number | components['schemas']['ItemsMoviesTranslations'])[]
+        | null;
+    };
+    ItemsMoviesTranslations: {
+      id?: number;
+      movies_id?: (string | components['schemas']['ItemsMovies']) | null;
       languages_code?:
         | (string | components['schemas']['ItemsLanguages'])
         | null;
@@ -5178,6 +5302,374 @@ export interface operations {
         content: {
           'application/json': {
             data?: components['schemas']['ItemsPagesTranslations'];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+      404: components['responses']['NotFoundError'];
+    };
+  };
+  readItemsMovies: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description A limit on the number of objects that are returned. */
+        limit?: components['parameters']['Limit'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+        /** @description How many items to skip when fetching data. */
+        offset?: components['parameters']['Offset'];
+        /** @description How to sort the returned items. `sort` is a CSV of fields used to sort the fetched items. Sorting defaults to ascending (ASC) order but a minus sign (` - `) can be used to reverse this to descending (DESC) order. Fields are prioritized by their order in the CSV. You can also use a ` ? ` to sort randomly. */
+        sort?: components['parameters']['Sort'];
+        /** @description Select items in collection by given conditions. */
+        filter?: components['parameters']['Filter'];
+        /** @description Filter by items that contain the given search query in one of their fields. */
+        search?: components['parameters']['Search'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsMovies'][];
+            meta?: components['schemas']['x-metadata'];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+    };
+  };
+  createItemsMovies: {
+    parameters: {
+      query?: {
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json':
+          | components['schemas']['ItemsMovies'][]
+          | components['schemas']['ItemsMovies'];
+      };
+    };
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsMovies'][];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+    };
+  };
+  updateItemsMovies: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description A limit on the number of objects that are returned. */
+        limit?: components['parameters']['Limit'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+        /** @description How many items to skip when fetching data. */
+        offset?: components['parameters']['Offset'];
+        /** @description How to sort the returned items. `sort` is a CSV of fields used to sort the fetched items. Sorting defaults to ascending (ASC) order but a minus sign (` - `) can be used to reverse this to descending (DESC) order. Fields are prioritized by their order in the CSV. You can also use a ` ? ` to sort randomly. */
+        sort?: components['parameters']['Sort'];
+        /** @description Select items in collection by given conditions. */
+        filter?: components['parameters']['Filter'];
+        /** @description Filter by items that contain the given search query in one of their fields. */
+        search?: components['parameters']['Search'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json':
+          | components['schemas']['ItemsMovies'][]
+          | components['schemas']['ItemsMovies'];
+      };
+    };
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsMovies'][];
+          };
+        };
+      };
+    };
+  };
+  readSingleItemsMovies: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+        /** @description Retrieve an item's state from a specific Content Version. The value corresponds to the "key" of the Content Version. */
+        version?: components['parameters']['Version'];
+      };
+      header?: never;
+      path: {
+        /** @description Index of the item. */
+        id: number | string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsMovies'];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+      404: components['responses']['NotFoundError'];
+    };
+  };
+  updateSingleItemsMovies: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+      };
+      header?: never;
+      path: {
+        /** @description Index of the item. */
+        id: number | string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['ItemsMovies'];
+      };
+    };
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsMovies'];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+      404: components['responses']['NotFoundError'];
+    };
+  };
+  readItemsMoviesTranslations: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description A limit on the number of objects that are returned. */
+        limit?: components['parameters']['Limit'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+        /** @description How many items to skip when fetching data. */
+        offset?: components['parameters']['Offset'];
+        /** @description How to sort the returned items. `sort` is a CSV of fields used to sort the fetched items. Sorting defaults to ascending (ASC) order but a minus sign (` - `) can be used to reverse this to descending (DESC) order. Fields are prioritized by their order in the CSV. You can also use a ` ? ` to sort randomly. */
+        sort?: components['parameters']['Sort'];
+        /** @description Select items in collection by given conditions. */
+        filter?: components['parameters']['Filter'];
+        /** @description Filter by items that contain the given search query in one of their fields. */
+        search?: components['parameters']['Search'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsMoviesTranslations'][];
+            meta?: components['schemas']['x-metadata'];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+    };
+  };
+  createItemsMoviesTranslations: {
+    parameters: {
+      query?: {
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json':
+          | components['schemas']['ItemsMoviesTranslations'][]
+          | components['schemas']['ItemsMoviesTranslations'];
+      };
+    };
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsMoviesTranslations'][];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+    };
+  };
+  updateItemsMoviesTranslations: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description A limit on the number of objects that are returned. */
+        limit?: components['parameters']['Limit'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+        /** @description How many items to skip when fetching data. */
+        offset?: components['parameters']['Offset'];
+        /** @description How to sort the returned items. `sort` is a CSV of fields used to sort the fetched items. Sorting defaults to ascending (ASC) order but a minus sign (` - `) can be used to reverse this to descending (DESC) order. Fields are prioritized by their order in the CSV. You can also use a ` ? ` to sort randomly. */
+        sort?: components['parameters']['Sort'];
+        /** @description Select items in collection by given conditions. */
+        filter?: components['parameters']['Filter'];
+        /** @description Filter by items that contain the given search query in one of their fields. */
+        search?: components['parameters']['Search'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json':
+          | components['schemas']['ItemsMoviesTranslations'][]
+          | components['schemas']['ItemsMoviesTranslations'];
+      };
+    };
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsMoviesTranslations'][];
+          };
+        };
+      };
+    };
+  };
+  readSingleItemsMoviesTranslations: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+        /** @description Retrieve an item's state from a specific Content Version. The value corresponds to the "key" of the Content Version. */
+        version?: components['parameters']['Version'];
+      };
+      header?: never;
+      path: {
+        /** @description Index of the item. */
+        id: number | string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsMoviesTranslations'];
+          };
+        };
+      };
+      401: components['responses']['UnauthorizedError'];
+      404: components['responses']['NotFoundError'];
+    };
+  };
+  updateSingleItemsMoviesTranslations: {
+    parameters: {
+      query?: {
+        /** @description Control what fields are being returned in the object. */
+        fields?: components['parameters']['Fields'];
+        /** @description What metadata to return in the response. */
+        meta?: components['parameters']['Meta'];
+      };
+      header?: never;
+      path: {
+        /** @description Index of the item. */
+        id: number | string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['ItemsMoviesTranslations'];
+      };
+    };
+    responses: {
+      /** @description Successful request */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data?: components['schemas']['ItemsMoviesTranslations'];
           };
         };
       };

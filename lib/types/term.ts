@@ -18,6 +18,7 @@ export const SUPPORTED_TERM_TYPES = [
   'person',
   'work',
   'page',
+  'movie',
 ] as const;
 
 export type SupportedTermType = (typeof SUPPORTED_TERM_TYPES)[number];

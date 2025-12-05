@@ -5,13 +5,15 @@ import type { DirectusTerm, SupportedTermType } from '@/lib/types/term';
 type CharacterItem = components['schemas']['ItemsCharacters'];
 type WorkItem = components['schemas']['ItemsWorks'];
 type PersonItem = components['schemas']['ItemsPersons'];
-type pagesItem = components['schemas']['ItemsPages'];
+type PagesItem = components['schemas']['ItemsPages'];
+type MovieItem = components['schemas']['ItemsMovies'];
 
-const COLLECTION_CONFIG = {
+export const COLLECTION_CONFIG = {
   character: '/items/characters',
   person: '/items/persons',
   work: '/items/works',
   page: '/items/pages',
+  movie: '/items/movies',
 } as const satisfies Record<SupportedTermType, string>;
 
 export async function fetchDirectusTerms(
@@ -39,7 +41,8 @@ export async function fetchDirectusTerms(
       | CharacterItem[]
       | WorkItem[]
       | PersonItem[]
-      | pagesItem[]
+      | PagesItem[]
+      | MovieItem[]
       | undefined,
     type: string,
   ): DirectusTerm[] => {

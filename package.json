@@ -9,7 +9,7 @@
     "lint": "eslint",
     "prepare": "husky",
     "format": "eslint --fix . && prettier --write .",
-    "openapi": "./script/fetch-directus-schema.sh && openapi-typescript ./lib/api/schema.json --output ./lib/api/v1.d.ts"
+    "openapi": "./scripts/fetch-directus-schema.sh && openapi-typescript ./lib/api/schema.json --output ./lib/api/v1.d.ts"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",

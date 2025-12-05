@@ -14,7 +14,10 @@ import type {
 } from '@/lib/types/term';
 import client from '@/lib/api/client';
 import { validateSlug } from '@/lib/utils/slug';
-import { fetchDirectusTerms } from '@/lib/services/directus-terms';
+import {
+  COLLECTION_CONFIG,
+  fetchDirectusTerms,
+} from '@/lib/services/directus-terms';
 import type { DirectusTerm } from '@/lib/types/term';
 
 const GEMINI_MODEL = 'gemini-2.5-flash-preview-09-2025';
@@ -161,13 +164,6 @@ export async function translateTermAction(request: {
     throw new Error('Failed to translate text');
   }
 }
-
-const COLLECTION_CONFIG = {
-  character: '/items/characters',
-  person: '/items/persons',
-  work: '/items/works',
-  page: '/items/pages',
-} as const satisfies Record<SupportedTermType, string>;
 
 type CollectionType = keyof typeof COLLECTION_CONFIG;
 
