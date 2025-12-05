@@ -203,15 +203,30 @@ export function TranslateTermsDialog({
                   <Input
                     id={`translation-${code}`}
                     value={formData.translations[code as LanguageCode]}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const newTranslations = {
+                        ...formData.translations,
+                        [code]: e.target.value,
+                      };
+
+                      // Auto-update ID when English translation changes (only for new terms)
+                      const shouldUpdateId =
+                        code === 'en' && !term?.directusMatches?.[0]?.id;
+                      const newId = shouldUpdateId
+                        ? generateSlug(e.target.value)
+                        : formData.id;
+
                       setFormData({
                         ...formData,
-                        translations: {
-                          ...formData.translations,
-                          [code]: e.target.value,
-                        },
-                      })
-                    }
+                        id: newId,
+                        translations: newTranslations,
+                      });
+
+                      // Clear ID error if we auto-generated a valid slug
+                      if (shouldUpdateId && validateSlug(newId)) {
+                        setIdError(null);
+                      }
+                    }}
                   />
                 </div>
               ))}
