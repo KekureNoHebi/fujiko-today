@@ -7,6 +7,7 @@ type WorkItem = components['schemas']['ItemsWorks'];
 type PersonItem = components['schemas']['ItemsPersons'];
 type PagesItem = components['schemas']['ItemsPages'];
 type MovieItem = components['schemas']['ItemsMovies'];
+type StoryItem = components['schemas']['ItemsStories'];
 
 export const COLLECTION_CONFIG = {
   character: '/items/characters',
@@ -14,6 +15,7 @@ export const COLLECTION_CONFIG = {
   work: '/items/works',
   page: '/items/pages',
   movie: '/items/movies',
+  story: '/items/stories',
 } as const satisfies Record<SupportedTermType, string>;
 
 export async function fetchDirectusTerms(
@@ -43,6 +45,7 @@ export async function fetchDirectusTerms(
       | PersonItem[]
       | PagesItem[]
       | MovieItem[]
+      | StoryItem[]
       | undefined,
     type: string,
   ): DirectusTerm[] => {
