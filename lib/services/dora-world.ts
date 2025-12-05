@@ -9,7 +9,7 @@ import {
   replacePlaceholders,
   createTurndownService,
 } from '@/lib/utils/content-helpers';
-import { fetchMarkdownFromConfiguredRepo } from '@/lib/services/github-api';
+import { defaultGitHubConfig, fetchFile } from '@/lib/services/github-api';
 
 const BASE_URL = 'https://www.dora-world.com';
 const turndownService = createTurndownService(BASE_URL);
@@ -169,19 +169,8 @@ export async function fetchContents({
   };
 }
 
-export async function getContent({
-  nextBuildId,
-  contentId,
-}: {
-  nextBuildId: string;
-  contentId: number;
-}) {
-  const response = await fetch(
-    `${BASE_URL}/_next/data/${nextBuildId}/contents/${contentId}.json`,
-  );
-  const data: ContentResponse = await response.json();
-  const content = data.pageProps.content;
-  const $ = cheerio.load(content.content || '');
+export function processContentHtmlToMarkdown(htmlContent: string): string {
+  const $ = cheerio.load(htmlContent || '');
   const main = $('.main_unit');
 
   const element = main.length > 0 ? main : $('body');
@@ -205,6 +194,21 @@ export async function getContent({
   return markdown;
 }
 
+export async function getContent({
+  nextBuildId,
+  contentId,
+}: {
+  nextBuildId: string;
+  contentId: number;
+}) {
+  const response = await fetch(
+    `${BASE_URL}/_next/data/${nextBuildId}/contents/${contentId}.json`,
+  );
+  const data: ContentResponse = await response.json();
+  const content = data.pageProps.content;
+  return processContentHtmlToMarkdown(content.content);
+}
+
 export async function getContentWithFallback({
   nextBuildId,
   contentId,
@@ -222,24 +226,27 @@ export async function getContentWithFallback({
   let markdown: string;
   const translationRequests: TriggerContentTranslationParams[] = [];
 
-  try {
-    markdown = await fetchMarkdownFromConfiguredRepo(
-      `${basePath}/${locale}/content.md`,
-    );
+  const localeResult = await fetchFile({
+    path: `${basePath}/${locale}/content.md`,
+    ...defaultGitHubConfig,
+  });
 
+  if (localeResult.status === 'success') {
     const termsData = await fetchDirectusTerms(locale);
-    markdown = replacePlaceholders(markdown, termsData);
-  } catch {
-    try {
-      markdown = await fetchMarkdownFromConfiguredRepo(
-        `${basePath}/ja/content.md`,
-      );
+    markdown = replacePlaceholders(localeResult.data, termsData);
+  } else {
+    const jaResult = await fetchFile({
+      path: `${basePath}/ja/content.md`,
+      ...defaultGitHubConfig,
+    });
 
+    if (jaResult.status === 'success') {
       const termsData = await fetchDirectusTerms('ja');
-      markdown = replacePlaceholders(markdown, termsData);
-    } catch {
+      markdown = replacePlaceholders(jaResult.data, termsData);
+    } else {
       markdown = await getContent({ nextBuildId, contentId });
     }
+
     translationRequests.push({
       text: markdown,
       targetLanguage: locale as LanguageCode,

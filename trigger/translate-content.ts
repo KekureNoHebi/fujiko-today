@@ -1,10 +1,11 @@
-import { logger, schemaTask } from '@trigger.dev/sdk/v3';
+import { logger, schemaTask } from '@trigger.dev/sdk';
 import { translateContent } from '@/lib/services/translation/translate';
 import { fetchDirectusTerms } from '@/lib/services/directus-terms';
 import { replaceTermsWithPlaceholders } from '@/lib/services/translation/replace-terms';
 import {
-  batchUpdateFilesOnConfiguredRepo,
-  fetchMarkdownFromConfiguredRepo,
+  batchUpdateFiles,
+  defaultGitHubConfig,
+  fetchFile,
 } from '@/lib/services/github-api';
 import { translateContentSchema } from '@/lib/schemas/translate-content';
 import { languageNames } from '@/lib/constants/term';
@@ -26,41 +27,26 @@ export const translateContentTask = schemaTask({
         uploadSourcePath: payload.uploadSourcePath,
       });
 
-      try {
-        const existingContent = await fetchMarkdownFromConfiguredRepo(
-          payload.uploadSourcePath,
+      const result = await fetchFile({
+        path: payload.uploadSourcePath,
+        ...defaultGitHubConfig,
+      });
+
+      if (result.status === 'not_found') {
+        logger.log(
+          'Source file does not exist yet - will be created during upload',
+          { message: result.message },
         );
-
-        if (existingContent.trim() !== payload.text.trim()) {
-          const error = new Error(
-            'Source file content mismatch: The provided text does not match the latest content in the repository. ' +
-              'This may indicate that the source has been updated since this translation task was queued.',
-          );
-          logger.error('Source file validation failed', {
-            uploadSourcePath: payload.uploadSourcePath,
-            providedTextLength: payload.text.length,
-            existingContentLength: existingContent.length,
-          });
-          throw error;
-        }
-
-        logger.log('Source file validation passed', {
-          uploadSourcePath: payload.uploadSourcePath,
-        });
-      } catch (error) {
-        if (
-          error instanceof Error &&
-          error.message.includes('Failed to fetch file from GitHub')
-        ) {
-          logger.log(
-            'Source file does not exist yet, allowing task to proceed',
-            {
-              uploadSourcePath: payload.uploadSourcePath,
-            },
-          );
-        } else {
-          throw error;
-        }
+      } else if (result.status === 'error') {
+        throw new Error(
+          `Failed to check source file consistency: ${result.message}`,
+        );
+      } else if (result.data !== payload.text) {
+        throw new Error(
+          `Source file content mismatch: The file at ${payload.uploadSourcePath} exists but its content does not match the provided text. This may indicate the source has been modified since the translation was triggered.`,
+        );
+      } else {
+        logger.log('Source file content verified - matches provided text');
       }
     }
 
@@ -117,16 +103,16 @@ export const translateContentTask = schemaTask({
             payload.sourceLanguage &&
             payload.sourceLanguage === payload.targetLanguage
           ) {
-            await batchUpdateFilesOnConfiguredRepo(
-              [
+            await batchUpdateFiles({
+              files: [
                 {
                   path: payload.uploadSourcePath,
                   content: payload.text,
                 },
               ],
-              `Update: ${payload.uploadSourcePath} (${payload.targetLanguage})`,
-              'master',
-            );
+              message: `Update: ${payload.uploadSourcePath} (${payload.targetLanguage})`,
+              ...defaultGitHubConfig,
+            });
             logger.log(
               'Upload completed (source only, no translation needed)',
               {
@@ -134,8 +120,8 @@ export const translateContentTask = schemaTask({
               },
             );
           } else {
-            await batchUpdateFilesOnConfiguredRepo(
-              [
+            await batchUpdateFiles({
+              files: [
                 {
                   path: payload.uploadSourcePath,
                   content: payload.text,
@@ -145,9 +131,9 @@ export const translateContentTask = schemaTask({
                   content: translatedText,
                 },
               ],
-              `Update: ${payload.uploadPath} (${payload.targetLanguage})`,
-              'master',
-            );
+              message: `Update: ${payload.uploadPath} (${payload.targetLanguage})`,
+              ...defaultGitHubConfig,
+            });
             logger.log('Upload completed (source and translation)', {
               uploadPath: payload.uploadPath,
               uploadSourcePath: payload.uploadSourcePath,

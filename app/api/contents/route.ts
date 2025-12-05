@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchDirectusTerms } from '@/lib/services/directus-terms';
 import { replacePlaceholders } from '@/lib/utils/content-helpers';
-import { fetchMarkdownFromConfiguredRepo } from '@/lib/services/github-api';
+import { defaultGitHubConfig, fetchFile } from '@/lib/services/github-api';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,9 +15,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const markdown = await fetchMarkdownFromConfiguredRepo(path);
+    const result = await fetchFile({ path, ...defaultGitHubConfig });
+
+    if (result.status !== 'success') {
+      return NextResponse.json({ exists: false });
+    }
+
     const termsData = await fetchDirectusTerms(locale);
-    const processedMarkdown = replacePlaceholders(markdown, termsData);
+    const processedMarkdown = replacePlaceholders(result.data, termsData);
 
     return NextResponse.json({
       exists: true,

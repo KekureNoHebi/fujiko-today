@@ -9,7 +9,7 @@ import {
   replacePlaceholders,
   createTurndownService,
 } from '@/lib/utils/content-helpers';
-import { fetchMarkdownFromConfiguredRepo } from '@/lib/services/github-api';
+import { defaultGitHubConfig, fetchFile } from '@/lib/services/github-api';
 
 const BASE_URL = 'https://fujiko-museum.com';
 const API_URL = `${BASE_URL}/wp-json/wp/v2`;
@@ -216,22 +216,24 @@ export async function getPostWithFallback({
   let markdown: string;
   const translationRequests: TriggerContentTranslationParams[] = [];
 
-  try {
-    markdown = await fetchMarkdownFromConfiguredRepo(
-      `${basePath}/${locale}/content.md`,
-    );
+  const localeResult = await fetchFile({
+    path: `${basePath}/${locale}/content.md`,
+    ...defaultGitHubConfig,
+  });
 
+  if (localeResult.status === 'success') {
     const termsData = await fetchDirectusTerms(locale);
-    markdown = replacePlaceholders(markdown, termsData);
-  } catch {
-    try {
-      markdown = await fetchMarkdownFromConfiguredRepo(
-        `${basePath}/ja/content.md`,
-      );
+    markdown = replacePlaceholders(localeResult.data, termsData);
+  } else {
+    const jaResult = await fetchFile({
+      path: `${basePath}/ja/content.md`,
+      ...defaultGitHubConfig,
+    });
 
+    if (jaResult.status === 'success') {
       const termsData = await fetchDirectusTerms('ja');
-      markdown = replacePlaceholders(markdown, termsData);
-    } catch {
+      markdown = replacePlaceholders(jaResult.data, termsData);
+    } else {
       markdown = await getPost({ postId });
     }
 

@@ -8,23 +8,35 @@ interface FetchFromGitHubOptions {
   owner: string;
   repo: string;
   path: string;
+  branch?: string;
   token?: string;
 }
 
-export const githubConfig = {
+export type FetchFileResult =
+  | { status: 'success'; data: string }
+  | { status: 'not_found'; message: string }
+  | { status: 'error'; message: string };
+
+export const defaultGitHubConfig = {
   owner: process.env.GITHUB_CONTENT_OWNER || '',
   repo: process.env.GITHUB_CONTENT_REPO || '',
   token: process.env.GITHUB_API_TOKEN || '',
-} as const;
+  branch: process.env.GITHUB_CONTENT_REPO_BRANCH || '',
+};
 
-async function fetchFileMetadata({
+export async function fetchFile({
   owner,
   repo,
   path,
+  branch,
   token,
-}: FetchFromGitHubOptions): Promise<GitHubFileResponse> {
+}: FetchFromGitHubOptions): Promise<FetchFileResult> {
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${cleanPath}`;
+  let url = `https://api.github.com/repos/${owner}/${repo}/contents/${cleanPath}`;
+
+  if (branch) {
+    url += `?ref=${encodeURIComponent(branch)}`;
+  }
 
   const headers: HeadersInit = {
     Accept: 'application/vnd.github.object',
@@ -34,53 +46,46 @@ async function fetchFileMetadata({
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const fetchOptions: RequestInit = { headers };
+  try {
+    const response = await fetch(url, { headers });
 
-  const response = await fetch(url, fetchOptions);
+    if (response.status === 404) {
+      return {
+        status: 'not_found',
+        message: `File not found: ${path}`,
+      };
+    }
 
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch file from GitHub: ${response.status} ${response.statusText}`,
-    );
+    if (!response.ok) {
+      return {
+        status: 'error',
+        message: `GitHub API error: ${response.status} ${response.statusText}`,
+      };
+    }
+
+    const data: GitHubFileResponse = await response.json();
+
+    if (data.encoding !== 'base64') {
+      return {
+        status: 'error',
+        message: `Unexpected encoding: ${data.encoding}`,
+      };
+    }
+
+    const decoded = Buffer.from(data.content, 'base64').toString('utf-8');
+    return {
+      status: 'success',
+      data: decoded,
+    };
+  } catch (error) {
+    return {
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
-
-  return response.json();
 }
 
-export async function fetchFromGitHub({
-  owner,
-  repo,
-  path,
-  token,
-}: FetchFromGitHubOptions): Promise<string> {
-  const data = await fetchFileMetadata({ owner, repo, path, token });
-
-  if (data.encoding !== 'base64') {
-    throw new Error(`Unexpected encoding: ${data.encoding}`);
-  }
-
-  const decoded = Buffer.from(data.content, 'base64').toString('utf-8');
-  return decoded;
-}
-
-export async function fetchMarkdownFromGitHub(
-  options: FetchFromGitHubOptions,
-): Promise<string> {
-  return fetchFromGitHub(options);
-}
-
-export async function fetchMarkdownFromConfiguredRepo(
-  path: string,
-): Promise<string> {
-  return fetchFromGitHub({
-    owner: githubConfig.owner,
-    repo: githubConfig.repo,
-    path,
-    token: githubConfig.token,
-  });
-}
-
-interface FileUpdate {
+export interface FileUpdate {
   path: string;
   content: string;
 }
@@ -109,7 +114,7 @@ interface GitHubRefResponse {
   };
 }
 
-export async function batchUpdateFilesOnGitHub({
+export async function batchUpdateFiles({
   owner,
   repo,
   files,
@@ -202,19 +207,4 @@ export async function batchUpdateFilesOnGitHub({
   }
 
   return commitData;
-}
-
-export async function batchUpdateFilesOnConfiguredRepo(
-  files: FileUpdate[],
-  message: string,
-  branch = 'main',
-): Promise<GitHubCommitResponse> {
-  return batchUpdateFilesOnGitHub({
-    owner: githubConfig.owner,
-    repo: githubConfig.repo,
-    files,
-    message,
-    branch,
-    token: githubConfig.token,
-  });
 }
