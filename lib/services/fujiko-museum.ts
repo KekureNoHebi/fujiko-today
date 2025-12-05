@@ -187,6 +187,16 @@ export async function getPost({ postId }: { postId: number }) {
 
   const post: WordPressBlogPost = await response.json();
   const $ = cheerio.load(post.content.rendered || '');
+  $('[src]').each((_, element) => {
+    const src = $(element).attr('src');
+    if (src && src.startsWith('https://1.1.97.241/administrator')) {
+      const newSrc = src.replace(
+        'https://1.1.97.241/administrator',
+        'https://fujiko-museum.com',
+      );
+      $(element).attr('src', newSrc);
+    }
+  });
   const markdown = turndownService.turndown($.html() || '');
   return markdown;
 }
@@ -221,41 +231,20 @@ export async function getPostWithFallback({
 
       const termsData = await fetchDirectusTerms('ja');
       markdown = replacePlaceholders(markdown, termsData);
-
-      // translationRequests.push({
-      //   text: markdown,
-      //   targetLanguage: locale as LanguageCode,
-      //   sourceLanguage: 'ja',
-      //   uploadPath: `${basePath}/${locale}/content.md`,
-      //   revalidatePath: `/${locale}/fujiko-museum/blog/${postId}`,
-      //   idempotencyKey: `fujiko-museum-${postId}-${locale}`,
-      //   idempotencyKeyTTL: '60s',
-      // });
     } catch {
       markdown = await getPost({ postId });
-
-      // translationRequests.push({
-      //   text: markdown,
-      //   targetLanguage: locale as LanguageCode,
-      //   sourceLanguage: 'ja',
-      //   uploadPath: `${basePath}/${locale}/content.md`,
-      //   revalidatePath: `/${locale}/fujiko-museum/blog/${postId}`,
-      //   idempotencyKey: `fujiko-museum-${postId}-${locale}`,
-      //   idempotencyKeyTTL: '60s',
-      // });
-
-      if (locale !== 'ja') {
-        // translationRequests.push({
-        //   text: markdown,
-        //   targetLanguage: 'ja',
-        //   sourceLanguage: 'ja',
-        //   uploadPath: `${basePath}/ja/content.md`,
-        //   revalidatePath: `/ja/fujiko-museum/blog/${postId}`,
-        //   idempotencyKey: `fujiko-museum-${postId}-ja`,
-        //   idempotencyKeyTTL: '60s',
-        // });
-      }
     }
+
+    translationRequests.push({
+      text: markdown,
+      targetLanguage: locale as LanguageCode,
+      sourceLanguage: 'ja',
+      uploadPath: `${basePath}/${locale}/content.md`,
+      uploadSourcePath: `${basePath}/ja/content.md`,
+      revalidatePath: `/${locale}/fujiko-museum/blog/${postId}`,
+      idempotencyKey: `fujiko-museum-${postId}-${locale}`,
+      idempotencyKeyTTL: '60s',
+    });
   }
 
   return {

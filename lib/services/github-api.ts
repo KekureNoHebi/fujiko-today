@@ -80,88 +80,141 @@ export async function fetchMarkdownFromConfiguredRepo(
   });
 }
 
-interface UpdateFileOptions {
-  owner: string;
-  repo: string;
+interface FileUpdate {
   path: string;
   content: string;
+}
+
+interface BatchUpdateOptions {
+  owner: string;
+  repo: string;
+  files: FileUpdate[];
   message: string;
-  sha?: string;
+  branch?: string;
   token: string;
 }
 
-export async function updateFileOnGitHub({
+interface GitHubCommitResponse {
+  sha: string;
+  url: string;
+}
+
+interface GitHubTreeResponse {
+  sha: string;
+}
+
+interface GitHubRefResponse {
+  object: {
+    sha: string;
+  };
+}
+
+export async function batchUpdateFilesOnGitHub({
   owner,
   repo,
-  path,
-  content,
+  files,
   message,
-  sha,
+  branch = 'main',
   token,
-}: UpdateFileOptions) {
-  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${cleanPath}`;
-
-  const encodedContent = Buffer.from(content, 'utf-8').toString('base64');
-
-  const body: {
-    message: string;
-    content: string;
-    sha?: string;
-  } = {
-    message,
-    content: encodedContent,
+}: BatchUpdateOptions): Promise<GitHubCommitResponse> {
+  const baseUrl = `https://api.github.com/repos/${owner}/${repo}`;
+  const headers = {
+    Accept: 'application/vnd.github+json',
+    Authorization: `Bearer ${token}`,
   };
 
-  if (sha) {
-    body.sha = sha;
-  }
-
-  const response = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
+  const refResponse = await fetch(`${baseUrl}/git/refs/heads/${branch}`, {
+    headers,
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
+  if (!refResponse.ok) {
     throw new Error(
-      `Failed to update file on GitHub: ${response.status} ${response.statusText} - ${errorText}`,
+      `Failed to get branch ref: ${refResponse.status} ${refResponse.statusText}`,
     );
   }
 
-  return response.json();
-}
+  const refData: GitHubRefResponse = await refResponse.json();
+  const currentCommitSha = refData.object.sha;
 
-export async function updateFileOnConfiguredRepo(
-  path: string,
-  content: string,
-  message: string,
-) {
-  let currentSha: string | undefined;
+  const tree = files.map((file) => {
+    const cleanPath = file.path.startsWith('/')
+      ? file.path.slice(1)
+      : file.path;
 
-  try {
-    const data = await fetchFileMetadata({
-      owner: githubConfig.owner,
-      repo: githubConfig.repo,
-      path,
-      token: githubConfig.token,
-    });
-    currentSha = data.sha;
-  } catch {
-    // File doesn't exist, will create new file
+    return {
+      path: cleanPath,
+      mode: '100644' as const,
+      type: 'blob' as const,
+      content: file.content,
+    };
+  });
+
+  const treeResponse = await fetch(`${baseUrl}/git/trees`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      base_tree: currentCommitSha,
+      tree,
+    }),
+  });
+
+  if (!treeResponse.ok) {
+    const errorText = await treeResponse.text();
+    throw new Error(
+      `Failed to create tree: ${treeResponse.status} ${treeResponse.statusText} - ${errorText}`,
+    );
   }
 
-  return updateFileOnGitHub({
+  const treeData: GitHubTreeResponse = await treeResponse.json();
+
+  const commitResponse = await fetch(`${baseUrl}/git/commits`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      message,
+      tree: treeData.sha,
+      parents: [currentCommitSha],
+    }),
+  });
+
+  if (!commitResponse.ok) {
+    const errorText = await commitResponse.text();
+    throw new Error(
+      `Failed to create commit: ${commitResponse.status} ${commitResponse.statusText} - ${errorText}`,
+    );
+  }
+
+  const commitData: GitHubCommitResponse = await commitResponse.json();
+
+  const updateRefResponse = await fetch(`${baseUrl}/git/refs/heads/${branch}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({
+      sha: commitData.sha,
+    }),
+  });
+
+  if (!updateRefResponse.ok) {
+    const errorText = await updateRefResponse.text();
+    throw new Error(
+      `Failed to update branch ref: ${updateRefResponse.status} ${updateRefResponse.statusText} - ${errorText}`,
+    );
+  }
+
+  return commitData;
+}
+
+export async function batchUpdateFilesOnConfiguredRepo(
+  files: FileUpdate[],
+  message: string,
+  branch = 'main',
+): Promise<GitHubCommitResponse> {
+  return batchUpdateFilesOnGitHub({
     owner: githubConfig.owner,
     repo: githubConfig.repo,
-    path,
-    content,
+    files,
     message,
-    sha: currentSha,
+    branch,
     token: githubConfig.token,
   });
 }

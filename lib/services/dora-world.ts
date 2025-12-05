@@ -237,41 +237,19 @@ export async function getContentWithFallback({
 
       const termsData = await fetchDirectusTerms('ja');
       markdown = replacePlaceholders(markdown, termsData);
-
-      // translationRequests.push({
-      //   text: markdown,
-      //   targetLanguage: locale as LanguageCode,
-      //   sourceLanguage: 'ja',
-      //   uploadPath: `${basePath}/${locale}/content.md`,
-      //   revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
-      //   idempotencyKey: `dora-world-${contentId}-${locale}`,
-      //   idempotencyKeyTTL: '60s',
-      // });
     } catch {
       markdown = await getContent({ nextBuildId, contentId });
-
-      // translationRequests.push({
-      //   text: markdown,
-      //   targetLanguage: locale as LanguageCode,
-      //   sourceLanguage: 'ja',
-      //   uploadPath: `${basePath}/${locale}/content.md`,
-      //   revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
-      //   idempotencyKey: `dora-world-${contentId}-${locale}`,
-      //   idempotencyKeyTTL: '60s',
-      // });
-
-      if (locale !== 'ja') {
-        // translationRequests.push({
-        //   text: markdown,
-        //   targetLanguage: 'ja',
-        //   sourceLanguage: 'ja',
-        //   uploadPath: `${basePath}/ja/content.md`,
-        //   revalidatePath: `/ja/dora-world/contents/${contentId}`,
-        //   idempotencyKey: `dora-world-${contentId}-ja`,
-        //   idempotencyKeyTTL: '60s',
-        // });
-      }
     }
+    translationRequests.push({
+      text: markdown,
+      targetLanguage: locale as LanguageCode,
+      sourceLanguage: 'ja',
+      uploadPath: `${basePath}/${locale}/content.md`,
+      uploadSourcePath: `${basePath}/ja/content.md`,
+      revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
+      idempotencyKey: `dora-world-${contentId}-${locale}`,
+      idempotencyKeyTTL: '60s',
+    });
   }
 
   return {

@@ -41,8 +41,8 @@ export default async function ArticleDetailPage({ params }: PageProps) {
   }
 
   const apiUrl =
-    translationRequests && translationRequests.length > 0
-      ? `/api/contents?locale=${locale}&path=/fujiko-today/dora-world/contents/${contentId}/${locale}/content.md`
+    translationRequests && translationRequests.length > 0 && locale !== 'ja'
+      ? `/api/contents?locale=${locale}&path=/dora-world/contents/${contentId}/${locale}/content.md`
       : undefined;
 
   return (
@@ -50,11 +50,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
       <div className="mx-auto w-full max-w-[min(65ch,calc(100vw-2rem))] sm:max-w-[min(70ch,calc(100vw-3rem))] lg:max-w-[min(75ch,calc(100vw-4rem))]">
         <BackToList locale={locale} basePath="dora-world/contents" />
         <article className="mt-3 sm:mt-4 md:mt-6">
-          <ArticleContent
-            locale={locale}
-            initialMarkdown={markdown}
-            apiUrl={apiUrl}
-          />
+          <ArticleContent initialMarkdown={markdown} apiUrl={apiUrl} />
         </article>
       </div>
     </div>

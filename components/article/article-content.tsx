@@ -7,7 +7,6 @@ import { markdownComponents } from '@/lib/markdown-components';
 import remarkBreaks from 'remark-breaks';
 
 interface ArticleContentProps {
-  locale: string;
   initialMarkdown: string;
   apiUrl?: string;
 }
@@ -15,7 +14,6 @@ interface ArticleContentProps {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function ArticleContent({
-  locale,
   initialMarkdown,
   apiUrl,
 }: ArticleContentProps) {
@@ -24,7 +22,7 @@ export function ArticleContent({
   );
 
   const { data } = useSWR<{ exists: boolean; markdown?: string }>(
-    apiUrl ? `${apiUrl}?locale=${locale}` : null,
+    apiUrl ? apiUrl : null,
     fetcher,
     {
       refreshInterval: (latestData) => (latestData?.exists ? 0 : 30000),
