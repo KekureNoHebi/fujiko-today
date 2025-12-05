@@ -2,13 +2,10 @@ import { logger, schemaTask } from '@trigger.dev/sdk';
 import { translateContent } from '@/lib/services/translation/translate';
 import { fetchDirectusTerms } from '@/lib/services/directus-terms';
 import { replaceTermsWithPlaceholders } from '@/lib/services/translation/replace-terms';
-import {
-  batchUpdateFiles,
-  defaultGitHubConfig,
-  fetchFile,
-} from '@/lib/services/github-api';
+import { defaultGitHubConfig, fetchFile } from '@/lib/services/github-api';
 import { translateContentSchema } from '@/lib/schemas/translate-content';
 import { languageNames } from '@/lib/constants/term';
+import { commitToGitHubTask } from './commit-to-github';
 
 export const translateContentTask = schemaTask({
   id: 'translate-content',
@@ -87,66 +84,55 @@ export const translateContentTask = schemaTask({
             languageNames[payload.targetLanguage] || payload.targetLanguage,
         });
 
-        logger.log('Translation completed', {
-          originalLength: payload.text,
-          translatedLength: translatedText,
-        });
+        logger.log('Translation completed');
       }
 
       if (payload.uploadPath && payload.uploadSourcePath) {
-        logger.log('Uploading content to GitHub', {
+        logger.log('Triggering GitHub commit task', {
           uploadPath: payload.uploadPath,
           uploadSourcePath: payload.uploadSourcePath,
         });
-        try {
-          if (
-            payload.sourceLanguage &&
-            payload.sourceLanguage === payload.targetLanguage
-          ) {
-            await batchUpdateFiles({
-              files: [
-                {
-                  path: payload.uploadSourcePath,
-                  content: payload.text,
-                },
-              ],
-              message: `Update: ${payload.uploadSourcePath} (${payload.targetLanguage})`,
-              ...defaultGitHubConfig,
-            });
-            logger.log(
-              'Upload completed (source only, no translation needed)',
-              {
-                uploadSourcePath: payload.uploadSourcePath,
-              },
-            );
-          } else {
-            await batchUpdateFiles({
-              files: [
-                {
-                  path: payload.uploadSourcePath,
-                  content: payload.text,
-                },
-                {
-                  path: payload.uploadPath,
-                  content: translatedText,
-                },
-              ],
-              message: `Update: ${payload.uploadPath} (${payload.targetLanguage})`,
-              ...defaultGitHubConfig,
-            });
-            logger.log('Upload completed (source and translation)', {
-              uploadPath: payload.uploadPath,
-              uploadSourcePath: payload.uploadSourcePath,
-            });
-          }
-        } catch (error) {
-          logger.error('Upload failed', {
-            uploadPath: payload.uploadPath,
-            uploadSourcePath: payload.uploadSourcePath,
-            error,
+
+        const files = [];
+
+        files.push({
+          path: payload.uploadSourcePath,
+          content: payload.text,
+        });
+
+        if (
+          !payload.sourceLanguage ||
+          payload.sourceLanguage !== payload.targetLanguage
+        ) {
+          files.push({
+            path: payload.uploadPath,
+            content: translatedText,
+          });
+        }
+
+        const result = await commitToGitHubTask.triggerAndWait({
+          files,
+          message: `Update: ${payload.uploadPath} (${payload.targetLanguage})`,
+        });
+
+        if (result.ok) {
+          logger.log('GitHub commit completed', {
+            commitSha: result.output.commitSha,
+          });
+        } else {
+          logger.error('GitHub commit failed', {
+            error: result.error,
           });
         }
       }
+
+      return {
+        translatedText,
+        targetLanguage: payload.targetLanguage,
+      };
+    } catch (error) {
+      logger.error('Translation failed', { error });
+      throw error;
     } finally {
       if (payload.revalidatePath) {
         logger.log('Revalidating path', {
@@ -179,10 +165,5 @@ export const translateContentTask = schemaTask({
         }
       }
     }
-
-    return {
-      translatedText,
-      targetLanguage: payload.targetLanguage,
-    };
   },
 });
