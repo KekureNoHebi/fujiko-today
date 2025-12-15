@@ -21,6 +21,50 @@ export function findTranslationByLanguage(
   });
 }
 
+export function replaceTermsWithPlaceholders(
+  text: string,
+  terms: DirectusTerm[],
+): string {
+  let processedText = text;
+
+  const sortedTerms = [...terms].sort((a, b) => b.name.length - a.name.length);
+
+  sortedTerms.forEach((term) => {
+    const regex = new RegExp(createFullHalfWidthPattern(term.name), 'g');
+    processedText = processedText.replace(regex, `{{${term.type}.${term.id}}}`);
+  });
+
+  return processedText;
+}
+
+function createFullHalfWidthPattern(text: string): string {
+  return escapeRegExp(text)
+    .split('')
+    .map((char) => {
+      const code = char.charCodeAt(0);
+
+      if (code >= 0x20 && code <= 0x7e) {
+        const fullWidth = String.fromCharCode(code + 0xfee0);
+        return `[${escapeRegExp(char)}${escapeRegExp(fullWidth)}]`;
+      }
+
+      if (code >= 0xff00 && code <= 0xff5e) {
+        const halfWidth = String.fromCharCode(code - 0xfee0);
+        return `[${escapeRegExp(char)}${escapeRegExp(halfWidth)}]`;
+      }
+
+      if (char === '\u3000') {
+        return '[\u3000 ]';
+      }
+      if (char === ' ') {
+        return '[ \u3000]';
+      }
+
+      return escapeRegExp(char);
+    })
+    .join('');
+}
+
 export function replacePlaceholders(
   markdown: string,
   termsData: Record<string, DirectusTerm[]>,

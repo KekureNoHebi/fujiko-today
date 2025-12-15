@@ -1,11 +1,11 @@
 import { logger, schemaTask } from '@trigger.dev/sdk';
 import { translateContent } from '@/lib/services/translation/translate';
 import { fetchDirectusTerms } from '@/lib/services/directus-terms';
-import { replaceTermsWithPlaceholders } from '@/lib/services/translation/replace-terms';
 import { defaultGitHubConfig, fetchFile } from '@/lib/services/github-api';
 import { translateContentSchema } from '@/lib/schemas/translate-content';
 import { languageNames } from '@/lib/constants/term';
 import { commitToGitHubTask } from './commit-to-github';
+import { replaceTermsWithPlaceholders } from '@/lib/utils/content-helpers';
 
 export const translateContentTask = schemaTask({
   id: 'translate-content',

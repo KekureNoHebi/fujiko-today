@@ -6,6 +6,8 @@ import { checkAuth } from '@/lib/auth';
 import ReactMarkdown from 'react-markdown';
 import { markdownComponents } from '@/lib/markdown-components';
 import remarkBreaks from 'remark-breaks';
+import { TranslationComparison } from '@/components/translation/translation-comparison';
+import { LanguageCode } from '@/lib/types/term';
 
 interface PageProps {
   params: Promise<{
@@ -37,13 +39,21 @@ export default async function PostDetailPage({ params }: PageProps) {
             {markdown}
           </ReactMarkdown>
         </article>
-        <div className="mt-8 sm:mt-10 md:mt-12 pt-6 sm:pt-8 border-t border-border">
-          {isAuthenticated ? (
+      </div>
+      <div className="mt-8 sm:mt-10 md:mt-12 pt-6 sm:pt-8 border-t border-border">
+        {isAuthenticated ? (
+          <>
             <TermAnalyzer content={markdown} />
-          ) : (
-            <LoginForm />
-          )}
-        </div>
+            <div className="mt-4">
+              <TranslationComparison
+                content={markdown}
+                targetLocale={locale as LanguageCode}
+              />
+            </div>
+          </>
+        ) : (
+          <LoginForm />
+        )}
       </div>
     </div>
   );

@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CheckCircle2, Circle, Copy, Check } from 'lucide-react';
+import { Loader2, CheckCircle2, Circle, Copy } from 'lucide-react';
 import { TranslateTermsDialog } from '@/components/term/translate-terms-dialog';
 import type { Term, DirectusTerm, AnalysisResult } from '@/lib/types/term';
 import { typeColors, typeLabels } from '@/lib/constants/term';
-import { replaceTermsWithPlaceholders } from '@/lib/services/translation/replace-terms';
 import { analyzeTermsAction, getDirectusTermsAction } from '@/lib/actions/term';
+import { toast } from 'sonner';
 
 interface TermAnalyzerProps {
   content: string;
@@ -21,8 +21,6 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
-  const [processedContent, setProcessedContent] = useState<string>('');
-  const [copied, setCopied] = useState(false);
 
   const enrichTermsWithDirectus = (
     terms: Term[],
@@ -43,7 +41,7 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
     try {
       const [analysisData, directusData] = await Promise.all([
         analyzeTermsAction({ text: content }),
-        getDirectusTermsAction(),
+        getDirectusTermsAction('ja'),
       ]);
 
       const enrichedTerms = enrichTermsWithDirectus(
@@ -51,10 +49,6 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
         directusData,
       );
       setResult({ terms: enrichedTerms });
-
-      const directusTerms = Object.values(directusData).flat();
-      const processed = replaceTermsWithPlaceholders(content, directusTerms);
-      setProcessedContent(processed);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -67,13 +61,9 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
 
     setLoading(true);
     try {
-      const directusData = await getDirectusTermsAction();
+      const directusData = await getDirectusTermsAction('ja');
       const enrichedTerms = enrichTermsWithDirectus(result.terms, directusData);
       setResult({ terms: enrichedTerms });
-
-      const directusTerms = Object.values(directusData).flat();
-      const processed = replaceTermsWithPlaceholders(content, directusTerms);
-      setProcessedContent(processed);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -86,13 +76,71 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
     setDialogOpen(true);
   };
 
-  const copyToClipboard = async () => {
+  const generatePrompt = async () => {
     try {
-      await navigator.clipboard.writeText(processedContent);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      // Fetch terms from Directus for both languages
+      const [jaData, zhData] = await Promise.all([
+        getDirectusTermsAction('ja'),
+        getDirectusTermsAction('zh-CN'),
+      ]);
+
+      const jaTerms = Object.values(jaData).flat();
+      const zhTerms = Object.values(zhData).flat();
+
+      // Create a map for quick lookup by ID
+      const zhTermMap = new Map(zhTerms.map((term) => [term.id, term.name]));
+
+      let prompt = `Please translate the following Japanese article into Simplified Chinese.
+
+# Translation Guidelines
+
+1. Provide only the translation without explanations or meta-commentary
+2. Maintain the original meaning and tone
+3. Use natural, fluent Chinese expressions
+4. **IMPORTANT**: Use the exact terminology translations provided below - do not translate these terms differently
+5. Keep the markdown formatting intact
+
+# Terminology Reference
+
+The following terms must be translated exactly as specified:
+
+`;
+
+      // Generate term list: Japanese -> Chinese
+      const termLines = jaTerms
+        .map((term) => {
+          const zhName = zhTermMap.get(term.id);
+          if (!zhName) return null;
+          return `- ${term.name} → ${zhName}`;
+        })
+        .filter((line): line is string => line !== null);
+
+      if (termLines.length > 0) {
+        prompt += termLines.join('\n') + '\n\n';
+      } else {
+        prompt += '(No terminology reference available)\n\n';
+      }
+
+      prompt += '# Article to Translate\n\n';
+      prompt += content;
+
+      return prompt;
+    } catch {
+      throw new Error('Failed to fetch terms from Directus');
+    }
+  };
+
+  const copyPrompt = async () => {
+    try {
+      setLoading(true);
+      const prompt = await generatePrompt();
+      await navigator.clipboard.writeText(prompt);
+      toast.success('Prompt copied to clipboard!');
     } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to copy prompt');
       console.error('Failed to copy:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,16 +162,22 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
           <CardTitle>AI Term Analysis</CardTitle>
         </CardHeader>
         <CardContent>
-          <Button onClick={analyzeContent} disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Analyzing...
-              </>
-            ) : (
-              'Analyze Terms'
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={analyzeContent} disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                'Analyze Terms'
+              )}
+            </Button>
+            <Button onClick={copyPrompt} disabled={loading} variant="outline">
+              <Copy className="mr-2 h-4 w-4" />
+              Copy Prompt
+            </Button>
+          </div>
 
           {error && (
             <div className="mt-4 p-4 bg-red-100 dark:bg-red-900 text-red-900 dark:text-red-100 rounded">
@@ -194,41 +248,6 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
           )}
         </CardContent>
       </Card>
-
-      {processedContent && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Processed Content with Placeholders</CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={copyToClipboard}
-                className="gap-2"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4" />
-                    Copy
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="p-4 bg-muted rounded-md">
-              <pre className="whitespace-pre-wrap font-mono text-sm">
-                {processedContent}
-              </pre>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       <TranslateTermsDialog
         open={dialogOpen}

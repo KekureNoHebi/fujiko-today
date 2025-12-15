@@ -11,12 +11,6 @@ interface PageProps {
   }>;
 }
 
-export const revalidate = false;
-
-export async function generateStaticParams() {
-  return [];
-}
-
 export default async function PostDetailPage({ params }: PageProps) {
   const { postId, locale } = await params;
 
