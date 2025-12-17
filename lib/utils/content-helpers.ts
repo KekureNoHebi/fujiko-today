@@ -37,7 +37,7 @@ export function replaceTermsWithPlaceholders(
   return processedText;
 }
 
-function createFullHalfWidthPattern(text: string): string {
+export function createFullHalfWidthPattern(text: string): string {
   return escapeRegExp(text)
     .split('')
     .map((char) => {

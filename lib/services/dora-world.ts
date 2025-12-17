@@ -255,7 +255,7 @@ export async function getContentWithFallback({
       uploadSourcePath: `${basePath}/ja/content.md`,
       revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
       idempotencyKey: `dora-world-${contentId}-${locale}`,
-      idempotencyKeyTTL: '60s',
+      idempotencyKeyTTL: '5m',
     });
   }
 

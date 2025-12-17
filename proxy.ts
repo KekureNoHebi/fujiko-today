@@ -25,6 +25,21 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Check authentication for /analyze pages
+  if (pathname.includes('/analyze')) {
+    const authCookie = request.cookies.get(AUTH_COOKIE_NAME);
+
+    if (!authCookie || authCookie.value !== 'authenticated') {
+      // Extract locale from pathname (e.g., /en/dora-world/contents/123/analyze)
+      const localeMatch = pathname.match(/^\/([^\/]+)\//);
+      const locale = localeMatch ? localeMatch[1] : 'en';
+
+      const loginUrl = new URL(`/${locale}/login`, request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
   // For non-API routes, use i18n middleware
   return i18nMiddleware(request);
 }

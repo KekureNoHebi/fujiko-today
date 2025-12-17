@@ -1,8 +1,6 @@
 import { getPost } from '@/lib/services/fujiko-museum';
 import { BackToList } from '@/components/navigation/back-to-list';
 import { TermAnalyzer } from '@/components/term/term-analyzer';
-import { LoginForm } from '@/components/auth/login-form';
-import { checkAuth } from '@/lib/auth';
 import ReactMarkdown from 'react-markdown';
 import { markdownComponents } from '@/lib/markdown-components';
 import remarkBreaks from 'remark-breaks';
@@ -18,7 +16,6 @@ interface PageProps {
 
 export default async function PostDetailPage({ params }: PageProps) {
   const { postId, locale } = await params;
-  const isAuthenticated = await checkAuth();
 
   const markdown = await getPost({
     postId: Number(postId),
@@ -41,19 +38,16 @@ export default async function PostDetailPage({ params }: PageProps) {
         </article>
       </div>
       <div className="mt-8 sm:mt-10 md:mt-12 pt-6 sm:pt-8 border-t border-border">
-        {isAuthenticated ? (
-          <>
-            <TermAnalyzer content={markdown} />
-            <div className="mt-4">
-              <TranslationComparison
-                content={markdown}
-                targetLocale={locale as LanguageCode}
-              />
-            </div>
-          </>
-        ) : (
-          <LoginForm />
-        )}
+        <TermAnalyzer
+          content={markdown}
+          targetLanguage={locale as LanguageCode}
+        />
+        <div className="mt-4">
+          <TranslationComparison
+            content={markdown}
+            targetLanguage={locale as LanguageCode}
+          />
+        </div>
       </div>
     </div>
   );

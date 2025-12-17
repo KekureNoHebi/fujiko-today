@@ -245,7 +245,7 @@ export async function getPostWithFallback({
       uploadSourcePath: `${basePath}/ja/content.md`,
       revalidatePath: `/${locale}/fujiko-museum/blog/${postId}`,
       idempotencyKey: `fujiko-museum-${postId}-${locale}`,
-      idempotencyKeyTTL: '60s',
+      idempotencyKeyTTL: '5m',
     });
   }
 

@@ -14,12 +14,12 @@ import type { TranslationResult } from '@/lib/types/translation';
 
 interface TranslationComparisonProps {
   content: string;
-  targetLocale: LanguageCode;
+  targetLanguage: LanguageCode;
 }
 
 export function TranslationComparison({
   content,
-  targetLocale,
+  targetLanguage,
 }: TranslationComparisonProps) {
   const [expanded, setExpanded] = useState(false);
   const [models, setModels] = useState<Model[]>([]);
@@ -101,7 +101,7 @@ export function TranslationComparison({
         },
         body: JSON.stringify({
           text: content,
-          targetLocale,
+          targetLanguage,
           models: selectedModels,
         }),
       });

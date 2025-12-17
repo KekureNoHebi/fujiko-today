@@ -1,5 +1,6 @@
 'use server';
 
+import OpenAI from 'openai';
 import {
   TERM_TYPES,
   LANGUAGE_CODES,
@@ -21,7 +22,7 @@ import {
 import { checkAuth } from '@/lib/auth';
 
 const OPENROUTER_MODEL = 'z-ai/glm-4.5-air:free';
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1';
 
 async function requireAuth() {
   const isAuthenticated = await checkAuth();
@@ -30,60 +31,47 @@ async function requireAuth() {
   }
 }
 
-function getOpenRouterApiKey() {
+function getOpenAIClient() {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new Error('OPENROUTER_API_KEY is not configured');
   }
-  return apiKey;
+
+  return new OpenAI({
+    apiKey,
+    baseURL: OPENROUTER_API_URL,
+  });
 }
 
 async function callOpenRouterAPI<T>(
   text: string,
   systemInstruction: string,
-  responseSchema: unknown,
+  responseSchema: Record<string, unknown>,
 ): Promise<T> {
-  const apiKey = getOpenRouterApiKey();
+  const openai = getOpenAIClient();
 
-  const response = await fetch(OPENROUTER_API_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
+  const response = await openai.chat.completions.create({
+    model: OPENROUTER_MODEL,
+    messages: [
+      {
+        role: 'system',
+        content: systemInstruction,
+      },
+      {
+        role: 'user',
+        content: text,
+      },
+    ],
+    response_format: {
+      type: 'json_schema',
+      json_schema: {
+        name: 'response',
+        strict: true,
+        schema: responseSchema,
+      },
     },
-    body: JSON.stringify({
-      model: OPENROUTER_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content: systemInstruction,
-        },
-        {
-          role: 'user',
-          content: text,
-        },
-      ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'response',
-          strict: true,
-          schema: responseSchema,
-        },
-      },
-      reasoning: {
-        enabled: true,
-      },
-    }),
   });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
+  const content = response.choices?.[0]?.message?.content;
 
   if (!content) {
     throw new Error('Empty response from AI');

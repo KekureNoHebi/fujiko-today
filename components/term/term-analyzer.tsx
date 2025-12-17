@@ -6,16 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, CheckCircle2, Circle, Copy } from 'lucide-react';
 import { TranslateTermsDialog } from '@/components/term/translate-terms-dialog';
-import type { Term, DirectusTerm, AnalysisResult } from '@/lib/types/term';
-import { typeColors, typeLabels } from '@/lib/constants/term';
+import type {
+  Term,
+  DirectusTerm,
+  AnalysisResult,
+  LanguageCode,
+} from '@/lib/types/term';
+import { languageNames, typeColors, typeLabels } from '@/lib/constants/term';
 import { analyzeTermsAction, getDirectusTermsAction } from '@/lib/actions/term';
 import { toast } from 'sonner';
+import { createFullHalfWidthPattern } from '@/lib/utils/content-helpers';
 
 interface TermAnalyzerProps {
   content: string;
+  targetLanguage: LanguageCode;
 }
 
-export function TermAnalyzer({ content }: TermAnalyzerProps) {
+export function TermAnalyzer({ content, targetLanguage }: TermAnalyzerProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -76,42 +83,51 @@ export function TermAnalyzer({ content }: TermAnalyzerProps) {
     setDialogOpen(true);
   };
 
-  const generatePrompt = async () => {
+  const generatePrompt = async ({
+    sourceLanguage = 'ja',
+    targetLanguage,
+    text,
+  }: {
+    sourceLanguage?: LanguageCode;
+    targetLanguage: LanguageCode;
+    text: string;
+  }) => {
     try {
-      // Fetch terms from Directus for both languages
-      const [jaData, zhData] = await Promise.all([
-        getDirectusTermsAction('ja'),
-        getDirectusTermsAction('zh-CN'),
+      const [sourceData, targetData] = await Promise.all([
+        getDirectusTermsAction(sourceLanguage),
+        getDirectusTermsAction(targetLanguage),
       ]);
 
-      const jaTerms = Object.values(jaData).flat();
-      const zhTerms = Object.values(zhData).flat();
+      const sourceTerms = Object.values(sourceData).flat();
+      const targetTerms = Object.values(targetData).flat();
 
-      // Create a map for quick lookup by ID
-      const zhTermMap = new Map(zhTerms.map((term) => [term.id, term.name]));
+      const targetTermMap = new Map(
+        targetTerms.map((term) => [term.id, term.name]),
+      );
 
-      let prompt = `Please translate the following Japanese article into Simplified Chinese.
+      const sourceLangName = languageNames[sourceLanguage] || sourceLanguage;
+      const targetLangName = languageNames[targetLanguage] || targetLanguage;
 
-# Translation Guidelines
+      let prompt = `Please translate the following ${sourceLangName} text into ${targetLangName}.
 
 1. Provide only the translation without explanations or meta-commentary
 2. Maintain the original meaning and tone
-3. Use natural, fluent Chinese expressions
+3. Use natural, fluent expressions
 4. **IMPORTANT**: Use the exact terminology translations provided below - do not translate these terms differently
 5. Keep the markdown formatting intact
-
-# Terminology Reference
 
 The following terms must be translated exactly as specified:
 
 `;
 
-      // Generate term list: Japanese -> Chinese
-      const termLines = jaTerms
+      const termLines = sourceTerms
         .map((term) => {
-          const zhName = zhTermMap.get(term.id);
-          if (!zhName) return null;
-          return `- ${term.name} → ${zhName}`;
+          const targetName = targetTermMap.get(term.id);
+          if (!targetName) return null;
+          const pattern = createFullHalfWidthPattern(term.name);
+          const regex = new RegExp(pattern);
+          if (!regex.test(text)) return null;
+          return `- ${term.name} → ${targetName}`;
         })
         .filter((line): line is string => line !== null);
 
@@ -121,8 +137,8 @@ The following terms must be translated exactly as specified:
         prompt += '(No terminology reference available)\n\n';
       }
 
-      prompt += '# Article to Translate\n\n';
-      prompt += content;
+      prompt += 'Text to Translate:\n\n';
+      prompt += text;
 
       return prompt;
     } catch {
@@ -132,8 +148,8 @@ The following terms must be translated exactly as specified:
 
   const copyPrompt = async () => {
     try {
+      const prompt = await generatePrompt({ targetLanguage, text: content });
       setLoading(true);
-      const prompt = await generatePrompt();
       await navigator.clipboard.writeText(prompt);
       toast.success('Prompt copied to clipboard!');
     } catch (err) {

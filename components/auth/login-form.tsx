@@ -8,7 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { login } from '@/lib/auth';
 
-export function LoginForm() {
+interface LoginFormProps {
+  redirectUrl?: string;
+}
+
+export function LoginForm({ redirectUrl }: LoginFormProps) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -22,7 +26,11 @@ export function LoginForm() {
     try {
       const result = await login(password);
       if (result.success) {
-        router.refresh();
+        if (redirectUrl) {
+          router.push(redirectUrl);
+        } else {
+          router.refresh();
+        }
       } else {
         setError(result.error || 'Login failed');
       }

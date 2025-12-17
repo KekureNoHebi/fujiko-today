@@ -1,8 +1,6 @@
 import { getContent, fetchBuildId } from '@/lib/services/dora-world';
 import ReactMarkdown from 'react-markdown';
 import { TermAnalyzer } from '@/components/term/term-analyzer';
-import { LoginForm } from '@/components/auth/login-form';
-import { checkAuth } from '@/lib/auth';
 import remarkBreaks from 'remark-breaks';
 import { BackToList } from '@/components/navigation/back-to-list';
 import { markdownComponents } from '@/lib/markdown-components';
@@ -18,7 +16,6 @@ interface PageProps {
 
 export default async function ArticleAnalyzePage({ params }: PageProps) {
   const { contentId, locale } = await params;
-  const isAuthenticated = await checkAuth();
 
   const nextBuildId = await fetchBuildId();
   const markdown = await getContent({
@@ -43,19 +40,16 @@ export default async function ArticleAnalyzePage({ params }: PageProps) {
         </article>
       </div>
       <div className="mt-8 sm:mt-10 md:mt-12 pt-6 sm:pt-8 border-t border-border">
-        {isAuthenticated ? (
-          <>
-            <TermAnalyzer content={markdown} />
-            <div className="mt-4">
-              <TranslationComparison
-                content={markdown}
-                targetLocale={locale as LanguageCode}
-              />
-            </div>
-          </>
-        ) : (
-          <LoginForm />
-        )}
+        <TermAnalyzer
+          content={markdown}
+          targetLanguage={locale as LanguageCode}
+        />
+        <div className="mt-4">
+          <TranslationComparison
+            content={markdown}
+            targetLanguage={locale as LanguageCode}
+          />
+        </div>
       </div>
     </div>
   );

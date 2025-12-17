@@ -12,7 +12,7 @@ import {
 export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
-  const { text, targetLocale, models } = await request.json();
+  const { text, targetLanguage, models } = await request.json();
 
   // Create a TransformStream for streaming responses
   const encoder = new TextEncoder();
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       // Fetch terms once for all translations
       const [sourceTermsData, targetTermsData] = await Promise.all([
         fetchDirectusTerms('ja' as LanguageCode),
-        fetchDirectusTerms(targetLocale as LanguageCode),
+        fetchDirectusTerms(targetLanguage as LanguageCode),
       ]);
 
       const directusTerms = Object.values(sourceTermsData).flat();
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
           const translatedText = await translateContent({
             text: textWithPlaceholders,
             targetLanguage:
-              languageNames[targetLocale as LanguageCode] || targetLocale,
+              languageNames[targetLanguage as LanguageCode] || targetLanguage,
             model,
           });
 
