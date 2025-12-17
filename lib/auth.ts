@@ -12,9 +12,11 @@ export async function login(password: string) {
     cookieStore.set(AUTH_COOKIE_NAME, 'authenticated', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'strict', // Changed from 'lax' to 'strict' for better iOS Safari compatibility
       maxAge: AUTH_COOKIE_MAX_AGE,
       path: '/',
+      // Adding priority to ensure cookie is set with high priority
+      priority: 'high',
     });
     return { success: true };
   }

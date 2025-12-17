@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const runtime = 'edge';
+
 export interface Model {
   id: string;
   name: string;

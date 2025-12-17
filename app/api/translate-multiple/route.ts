@@ -9,7 +9,7 @@ import {
   replaceTermsWithPlaceholders,
 } from '@/lib/utils/content-helpers';
 
-export const maxDuration = 300;
+export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   const { text, targetLanguage, models } = await request.json();

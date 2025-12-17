@@ -1,6 +1,8 @@
 import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'edge';
+
 const REVALIDATE_SECRET = process.env.REVALIDATE_SECRET;
 
 export async function POST(request: NextRequest) {

@@ -3,6 +3,8 @@ import { fetchDirectusTerms } from '@/lib/services/directus-terms';
 import { replacePlaceholders } from '@/lib/utils/content-helpers';
 import { defaultGitHubConfig, fetchFile } from '@/lib/services/github-api';
 
+export const runtime = 'edge';
+
 export async function GET(request: NextRequest) {
   try {
     const locale = request.nextUrl.searchParams.get('locale') || 'en';

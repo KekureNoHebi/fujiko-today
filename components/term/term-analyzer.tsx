@@ -146,18 +146,28 @@ The following terms must be translated exactly as specified:
     }
   };
 
-  const copyPrompt = async () => {
-    try {
-      const prompt = await generatePrompt({ targetLanguage, text: content });
-      setLoading(true);
-      await navigator.clipboard.writeText(prompt);
-      toast.success('Prompt copied to clipboard!');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to copy prompt');
-      console.error('Failed to copy:', err);
-    } finally {
-      setLoading(false);
-    }
+  const copyPrompt = () => {
+    setLoading(true);
+
+    // Pass the promise directly to ClipboardItem to maintain user interaction context
+    const textPromise = generatePrompt({ targetLanguage, text: content }).then(
+      (prompt) => new Blob([prompt], { type: 'text/plain' }),
+    );
+
+    navigator.clipboard
+      .write([new ClipboardItem({ 'text/plain': textPromise })])
+      .then(() => {
+        toast.success('Prompt copied to clipboard!');
+      })
+      .catch((err) => {
+        toast.error(
+          err instanceof Error ? err.message : 'Failed to copy prompt',
+        );
+        console.error('Failed to copy:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const groupedTerms = result?.terms.reduce(
