@@ -169,8 +169,8 @@ The following terms must be translated exactly as specified:
               const delta = parsed.choices?.[0]?.delta;
 
               // Handle reasoning content (thinking process)
-              if (delta?.reasoning_content) {
-                setThinkingContent((prev) => prev + delta.reasoning_content);
+              if (delta?.reasoning) {
+                setThinkingContent((prev) => prev + delta.reasoning);
               }
 
               // Handle actual response content
