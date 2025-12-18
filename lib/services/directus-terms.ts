@@ -84,3 +84,84 @@ export async function fetchDirectusTerms(
 
   return result;
 }
+
+export interface TermWithAllLanguages {
+  id: string;
+  type: SupportedTermType;
+  translations: Record<string, string>;
+}
+
+export async function fetchAllTermsWithAllLanguages(): Promise<
+  Record<SupportedTermType, TermWithAllLanguages[]>
+> {
+  const fetchAllTranslations = async (
+    endpoint: (typeof COLLECTION_CONFIG)[SupportedTermType],
+  ) => {
+    return client.GET(endpoint, {
+      params: {
+        query: {
+          fields: ['id', 'translations.*'],
+        },
+      },
+    });
+  };
+
+  const extractAllLanguages = (
+    items:
+      | CharacterItem[]
+      | WorkItem[]
+      | PersonItem[]
+      | PagesItem[]
+      | MovieItem[]
+      | StoryItem[]
+      | undefined,
+    type: SupportedTermType,
+  ): TermWithAllLanguages[] => {
+    if (!items) return [];
+    return items
+      .map((item) => {
+        if (!item.translations || !Array.isArray(item.translations))
+          return null;
+
+        const translations: Record<string, string> = {};
+        item.translations.forEach((t) => {
+          if (
+            typeof t === 'object' &&
+            t !== null &&
+            'languages_code' in t &&
+            'name' in t &&
+            typeof t.languages_code === 'string' &&
+            typeof t.name === 'string'
+          ) {
+            translations[t.languages_code] = t.name;
+          }
+        });
+
+        if (Object.keys(translations).length === 0) return null;
+
+        return {
+          id: item.id,
+          type,
+          translations,
+        };
+      })
+      .filter((item): item is TermWithAllLanguages => item !== null);
+  };
+
+  const responses = await Promise.all(
+    Object.entries(COLLECTION_CONFIG).map(async ([type, endpoint]) => ({
+      type: type as SupportedTermType,
+      response: await fetchAllTranslations(endpoint),
+    })),
+  );
+
+  const result = responses.reduce(
+    (acc, { type, response }) => {
+      acc[type] = extractAllLanguages(response.data?.data, type);
+      return acc;
+    },
+    {} as Record<SupportedTermType, TermWithAllLanguages[]>,
+  );
+
+  return result;
+}

@@ -4,7 +4,7 @@ export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, enableThinking = false } = await request.json();
+    const { prompt } = await request.json();
 
     if (!prompt) {
       return NextResponse.json(
@@ -13,16 +13,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.DASHSCOPE_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'DASHSCOPE_API_KEY is not configured' },
+        { error: 'OPENROUTER_API_KEY is not configured' },
         { status: 500 },
       );
     }
 
     const requestBody: Record<string, unknown> = {
-      model: 'glm-4.5-air',
+      model: 'z-ai/glm-4.5-air:free',
       messages: [
         {
           role: 'user',
@@ -30,15 +30,13 @@ export async function POST(request: NextRequest) {
         },
       ],
       stream: true,
+      reasoning: {
+        enabled: true,
+      },
     };
 
-    // Enable thinking mode if requested
-    if (enableThinking) {
-      requestBody.enable_thinking = true;
-    }
-
     const response = await fetch(
-      'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+      'https://openrouter.ai/api/v1/chat/completions',
       {
         method: 'POST',
         headers: {

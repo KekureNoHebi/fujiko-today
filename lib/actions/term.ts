@@ -18,7 +18,9 @@ import { validateSlug } from '@/lib/utils/slug';
 import {
   COLLECTION_CONFIG,
   fetchDirectusTerms,
+  fetchAllTermsWithAllLanguages,
 } from '@/lib/services/directus-terms';
+import type { TermWithAllLanguages } from '@/lib/services/directus-terms';
 import { checkAuth } from '@/lib/auth';
 
 const OPENROUTER_MODEL = 'z-ai/glm-4.5-air:free';
@@ -242,5 +244,16 @@ export async function getDirectusTermsAction(
   } catch (error) {
     console.error('Error fetching Directus terms:', error);
     throw new Error('Failed to fetch Directus terms');
+  }
+}
+
+export async function getAllTermsWithAllLanguagesAction(): Promise<
+  Record<SupportedTermType, TermWithAllLanguages[]>
+> {
+  try {
+    return await fetchAllTermsWithAllLanguages();
+  } catch (error) {
+    console.error('Error fetching all terms:', error);
+    throw new Error('Failed to fetch all terms');
   }
 }

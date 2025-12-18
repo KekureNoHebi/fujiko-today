@@ -12,11 +12,5 @@ export default async function TranslateToolPage({
 }: TranslateToolPageProps) {
   const { locale } = await params;
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 px-4 max-w-6xl">
-        <TranslateTool locale={locale} />
-      </div>
-    </div>
-  );
+  return <TranslateTool locale={locale} />;
 }
