@@ -4,11 +4,19 @@ export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt } = await request.json();
+    const {
+      text,
+      targetLanguageName,
+      enableThinking = false,
+    } = await request.json();
 
-    if (!prompt) {
+    if (!text) {
+      return NextResponse.json({ error: 'Text is required' }, { status: 400 });
+    }
+
+    if (!targetLanguageName) {
       return NextResponse.json(
-        { error: 'Prompt is required' },
+        { error: 'Target language name is required' },
         { status: 400 },
       );
     }
@@ -21,19 +29,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Use different models based on thinking mode
+    const model = enableThinking
+      ? 'z-ai/glm-4.5-air:free'
+      : 'mistralai/devstral-2512:free';
+
     const requestBody: Record<string, unknown> = {
-      model: 'z-ai/glm-4.5-air:free',
+      model,
       messages: [
         {
+          role: 'system',
+          content: `You are a professional translator specializing in Japanese cultural content.
+
+Translate the following content into ${targetLanguageName}:
+
+Requirements:
+1. Provide only the translation without explanations or meta-commentary
+2. Preserve all placeholders in the exact format {{type.id}} (e.g., {{character.example}}, {{work.example}}) - do not translate or modify them
+3. Maintain all Markdown formatting (headings, links, lists, bold, italic, etc.)
+4. Produce natural, fluent translations appropriate for the target language
+5. Preserve the original meaning and tone
+
+Output only the translated text.`,
+        },
+        {
           role: 'user',
-          content: prompt,
+          content: text,
         },
       ],
       stream: true,
-      reasoning: {
-        enabled: true,
-      },
     };
+
+    // Only add reasoning config for thinking-capable models
+    if (enableThinking) {
+      requestBody.reasoning = {
+        enabled: true,
+      };
+    }
 
     const response = await fetch(
       'https://openrouter.ai/api/v1/chat/completions',

@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Conversation,
   ConversationContent,
@@ -25,7 +26,12 @@ import {
 import { getDirectusTermsAction } from '@/lib/actions/term';
 import { languageLabels, languageNames } from '@/lib/constants/term';
 import type { LanguageCode } from '@/lib/types/term';
-import { createFullHalfWidthPattern } from '@/lib/utils/content-helpers';
+import {
+  createFullHalfWidthPattern,
+  replaceTermsWithPlaceholders,
+  replacePlaceholders,
+} from '@/lib/utils/content-helpers';
+import { useTypewriter } from '@/hooks/use-typewriter';
 
 const availableLanguages = Object.keys(languageLabels) as LanguageCode[];
 
@@ -35,7 +41,6 @@ interface TranslateToolProps {
 
 export function TranslateTool({ locale }: TranslateToolProps) {
   const [text, setText] = useState('');
-  const [prompt, setPrompt] = useState('');
   const [translation, setTranslation] = useState('');
   const [thinkingContent, setThinkingContent] = useState('');
   const [sourceLanguage, setSourceLanguage] = useState<LanguageCode>('ja');
@@ -44,6 +49,9 @@ export function TranslateTool({ locale }: TranslateToolProps) {
   );
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
+  const [enableThinking, setEnableThinking] = useState(false);
+
+  const displayedText = useTypewriter(translation, 5);
 
   const generatePrompt = async () => {
     if (!text.trim()) {
@@ -52,7 +60,6 @@ export function TranslateTool({ locale }: TranslateToolProps) {
     }
 
     setLoading(true);
-    setPrompt('');
 
     try {
       const [sourceData, targetData] = await Promise.all([
@@ -102,7 +109,6 @@ The following terms must be translated exactly as specified:
       generatedPrompt += 'Text to Translate:\n\n';
       generatedPrompt += text;
 
-      setPrompt(generatedPrompt);
       return generatedPrompt;
     } catch (error) {
       toast.error(
@@ -115,11 +121,9 @@ The following terms must be translated exactly as specified:
     }
   };
 
-  const translateWithStream = async (promptToUse?: string) => {
-    const finalPrompt = promptToUse || prompt;
-
-    if (!finalPrompt) {
-      toast.error('Generate a prompt first');
+  const translateWithStream = async () => {
+    if (!text.trim()) {
+      toast.error('Please enter text to translate');
       return;
     }
 
@@ -128,12 +132,29 @@ The following terms must be translated exactly as specified:
     setThinkingContent('');
 
     try {
+      const [sourceData, targetData] = await Promise.all([
+        getDirectusTermsAction(sourceLanguage),
+        getDirectusTermsAction(targetLanguage),
+      ]);
+
+      const sourceTerms = Object.values(sourceData).flat();
+      const textWithPlaceholders = replaceTermsWithPlaceholders(
+        text,
+        sourceTerms,
+      );
+
+      const targetLangName = languageNames[targetLanguage] || targetLanguage;
+
       const response = await fetch('/api/translate-stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: finalPrompt }),
+        body: JSON.stringify({
+          text: textWithPlaceholders,
+          targetLanguageName: targetLangName,
+          enableThinking,
+        }),
       });
 
       if (!response.ok) {
@@ -168,14 +189,15 @@ The following terms must be translated exactly as specified:
               const parsed = JSON.parse(data);
               const delta = parsed.choices?.[0]?.delta;
 
-              // Handle reasoning content (thinking process)
               if (delta?.reasoning) {
                 setThinkingContent((prev) => prev + delta.reasoning);
               }
 
-              // Handle actual response content
               if (delta?.content) {
-                setTranslation((prev) => prev + delta.content);
+                setTranslation((prev) => {
+                  const newContent = prev + delta.content;
+                  return replacePlaceholders(newContent, targetData);
+                });
               }
             } catch (e) {
               console.error('Parse error:', e);
@@ -212,7 +234,6 @@ The following terms must be translated exactly as specified:
     <div className="h-[calc(100dvh-6rem)] sm:h-[calc(100dvh-7rem)] md:h-[calc(100dvh-8rem)] max-w-7xl mx-auto">
       <Conversation className="h-full">
         <ConversationContent className="gap-4">
-          {/* Language Selection */}
           <div className="grid grid-cols-2 gap-4 max-w-md">
             <div className="space-y-2">
               <label className="text-sm font-medium">From</label>
@@ -256,7 +277,6 @@ The following terms must be translated exactly as specified:
             </div>
           </div>
 
-          {/* Input Section */}
           <div className="space-y-3">
             <Textarea
               placeholder="Enter text to translate..."
@@ -264,6 +284,22 @@ The following terms must be translated exactly as specified:
               onChange={(e) => setText(e.target.value)}
               className="min-h-[120px] resize-none"
             />
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="enable-thinking"
+                checked={enableThinking}
+                onCheckedChange={(checked) =>
+                  setEnableThinking(checked === true)
+                }
+              />
+              <label
+                htmlFor="enable-thinking"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Enable thinking mode (uses reasoning model)
+              </label>
+            </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <Button
@@ -302,12 +338,7 @@ The following terms must be translated exactly as specified:
               </Button>
 
               <Button
-                onClick={async () => {
-                  const promptToUse = await generatePrompt();
-                  if (promptToUse) {
-                    await translateWithStream(promptToUse);
-                  }
-                }}
+                onClick={translateWithStream}
                 disabled={loading || streaming || !text.trim()}
               >
                 {streaming ? (
@@ -325,7 +356,6 @@ The following terms must be translated exactly as specified:
             </div>
           </div>
 
-          {/* Reasoning Process */}
           {thinkingContent && (
             <Reasoning isStreaming={streaming} defaultOpen={true}>
               <ReasoningTrigger />
@@ -334,16 +364,28 @@ The following terms must be translated exactly as specified:
           )}
 
           {/* Translation Result */}
-          {translation && (
+          {displayedText && (
             <div className="space-y-3">
               <div className="prose dark:prose-invert max-w-none">
                 <div className="whitespace-pre-wrap wrap-break-word">
-                  {translation}
+                  {displayedText.split('').map((char, index) => {
+                    // Handle newlines separately to preserve line breaks
+                    if (char === '\n') {
+                      return <br key={index} />;
+                    }
+                    return (
+                      <span
+                        key={index}
+                        className="inline-block animate-in fade-in duration-100"
+                      >
+                        {char}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Action buttons */}
-              {!streaming && (
+              {!streaming && displayedText.length === translation.length && (
                 <div className="flex gap-2">
                   <Button onClick={copyTranslation} variant="outline" size="sm">
                     <Copy className="mr-2 h-3.5 w-3.5" />
