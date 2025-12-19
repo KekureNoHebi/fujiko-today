@@ -27,10 +27,10 @@ import { getDirectusTermsAction } from '@/lib/actions/term';
 import { languageLabels, languageNames } from '@/lib/constants/term';
 import type { LanguageCode } from '@/lib/types/term';
 import {
-  createFullHalfWidthPattern,
   replaceTermsWithPlaceholders,
   replacePlaceholders,
 } from '@/lib/utils/content-helpers';
+import { generateTranslationPrompt } from '@/lib/utils/translation-prompt';
 const availableLanguages = Object.keys(languageLabels) as LanguageCode[];
 
 interface TranslateToolProps {
@@ -48,74 +48,6 @@ export function TranslateTool({ locale }: TranslateToolProps) {
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const [enableThinking, setEnableThinking] = useState(false);
-
-  const generatePrompt = async () => {
-    if (!text.trim()) {
-      toast.error('Please enter text to translate');
-      return '';
-    }
-
-    setLoading(true);
-
-    try {
-      const [sourceData, targetData] = await Promise.all([
-        getDirectusTermsAction(sourceLanguage),
-        getDirectusTermsAction(targetLanguage),
-      ]);
-
-      const sourceTerms = Object.values(sourceData).flat();
-      const targetTerms = Object.values(targetData).flat();
-
-      const targetTermMap = new Map(
-        targetTerms.map((term) => [term.id, term.name]),
-      );
-
-      const sourceLangName = languageNames[sourceLanguage] || sourceLanguage;
-      const targetLangName = languageNames[targetLanguage] || targetLanguage;
-
-      let generatedPrompt = `Please translate the following ${sourceLangName} text into ${targetLangName}.
-
-1. Provide only the translation without explanations or meta-commentary
-2. Maintain the original meaning and tone
-3. Use natural, fluent expressions
-4. **IMPORTANT**: Use the exact terminology translations provided below - do not translate these terms differently
-5. Keep the markdown formatting intact
-
-The following terms must be translated exactly as specified:
-
-`;
-
-      const termLines = sourceTerms
-        .map((term) => {
-          const targetName = targetTermMap.get(term.id);
-          if (!targetName) return null;
-          const pattern = createFullHalfWidthPattern(term.name);
-          const regex = new RegExp(pattern);
-          if (!regex.test(text)) return null;
-          return `- ${term.name} → ${targetName}`;
-        })
-        .filter((line): line is string => line !== null);
-
-      if (termLines.length > 0) {
-        generatedPrompt += termLines.join('\n') + '\n\n';
-      } else {
-        generatedPrompt += '(No terminology reference available)\n\n';
-      }
-
-      generatedPrompt += 'Text to Translate:\n\n';
-      generatedPrompt += text;
-
-      return generatedPrompt;
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to generate prompt',
-      );
-      console.error('Generate prompt error:', error);
-      return '';
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const translateWithStream = async () => {
     if (!text.trim()) {
@@ -303,20 +235,45 @@ The following terms must be translated exactly as specified:
             <div className="flex flex-wrap items-center gap-3">
               <Button
                 onClick={() => {
+                  if (!text.trim()) {
+                    toast.error('Please enter text to translate');
+                    return;
+                  }
+
+                  setLoading(true);
+
                   navigator.clipboard
                     .write([
                       new ClipboardItem({
-                        'text/plain': generatePrompt().then((prompt) => {
-                          if (!prompt) throw new Error('No prompt generated');
-                          return new Blob([prompt], { type: 'text/plain' });
-                        }),
+                        'text/plain': generateTranslationPrompt({
+                          sourceLanguage,
+                          targetLanguage,
+                          text,
+                        })
+                          .then(
+                            (prompt) =>
+                              new Blob([prompt], { type: 'text/plain' }),
+                          )
+                          .catch((error) => {
+                            toast.error(
+                              error instanceof Error
+                                ? error.message
+                                : 'Failed to generate prompt',
+                            );
+                            throw error;
+                          })
+                          .finally(() => {
+                            setLoading(false);
+                          }),
                       }),
                     ])
                     .then(() => {
                       toast.success('Prompt copied to clipboard!');
                     })
                     .catch((error) => {
-                      toast.error('Failed to copy prompt');
+                      if (error.message !== 'Failed to generate prompt') {
+                        toast.error('Failed to copy prompt');
+                      }
                       console.error('Copy error:', error);
                     });
                 }}

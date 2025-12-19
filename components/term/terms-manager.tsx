@@ -17,11 +17,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { languageLabels, languageNames } from '@/lib/constants/term';
+import { languageLabels } from '@/lib/constants/term';
 import type { LanguageCode, SupportedTermType } from '@/lib/types/term';
 import type { TermWithAllLanguages } from '@/lib/services/directus-terms';
 import { getAllTermsWithAllLanguagesAction } from '@/lib/actions/term';
 import { ChevronDown } from 'lucide-react';
+import { generateTranslationPrompt } from '@/lib/utils/translation-prompt';
 
 const availableLanguages = Object.keys(languageLabels) as LanguageCode[];
 
@@ -116,69 +117,20 @@ export function TermsManager({ locale }: TermsManagerProps) {
     });
   };
 
-  const generatePrompt = () => {
+  const generatePrompt = async () => {
     if (selectedTerms.size === 0) {
       toast.error('Please select at least one term');
       return;
     }
 
-    const sourceLangName = languageNames[sourceLanguage] || sourceLanguage;
-    const targetLangName = languageNames[targetLanguage] || targetLanguage;
-
-    let prompt = `Please translate the following ${sourceLangName} text into ${targetLangName}.
-
-1. Provide only the translation without explanations or meta-commentary
-2. Maintain the original meaning and tone
-3. Use natural, fluent expressions
-4. **IMPORTANT**: Use the exact terminology translations provided below - do not translate these terms differently
-5. Keep the markdown formatting intact
-
-The following terms must be translated exactly as specified:
-
-`;
-
-    // Group selected terms by type
-    const selectedByType: Record<SupportedTermType, TermWithAllLanguages[]> = {
-      character: [],
-      person: [],
-      work: [],
-      page: [],
-      movie: [],
-      story: [],
-    };
-
-    selectedTerms.forEach((termId) => {
-      for (const [type, typeTerms] of Object.entries(terms)) {
-        const term = typeTerms.find((t) => t.id === termId);
-        if (term) {
-          selectedByType[type as SupportedTermType].push(term);
-          break;
-        }
-      }
+    return generateTranslationPrompt({
+      targetLanguage,
+      text: '',
     });
-
-    // Add terms to prompt
-    for (const [type, typeTerms] of Object.entries(selectedByType)) {
-      if (typeTerms.length > 0) {
-        prompt += `## ${typeLabels[type as SupportedTermType]}\n`;
-        typeTerms.forEach((term) => {
-          const sourceName = term.translations[sourceLanguage];
-          const targetName = term.translations[targetLanguage];
-          if (sourceName && targetName) {
-            prompt += `- ${sourceName} → ${targetName}\n`;
-          }
-        });
-        prompt += '\n';
-      }
-    }
-
-    prompt += 'Text to Translate:\n\n';
-
-    return prompt;
   };
 
-  const copyPrompt = () => {
-    const prompt = generatePrompt();
+  const copyPrompt = async () => {
+    const prompt = await generatePrompt();
     if (!prompt) return;
 
     navigator.clipboard

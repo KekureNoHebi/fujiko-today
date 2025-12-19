@@ -12,10 +12,10 @@ import type {
   AnalysisResult,
   LanguageCode,
 } from '@/lib/types/term';
-import { languageNames, typeColors, typeLabels } from '@/lib/constants/term';
+import { typeColors, typeLabels } from '@/lib/constants/term';
 import { analyzeTermsAction, getDirectusTermsAction } from '@/lib/actions/term';
 import { toast } from 'sonner';
-import { createFullHalfWidthPattern } from '@/lib/utils/content-helpers';
+import { generateTranslationPrompt } from '@/lib/utils/translation-prompt';
 
 interface TermAnalyzerProps {
   content: string;
@@ -83,76 +83,13 @@ export function TermAnalyzer({ content, targetLanguage }: TermAnalyzerProps) {
     setDialogOpen(true);
   };
 
-  const generatePrompt = async ({
-    sourceLanguage = 'ja',
-    targetLanguage,
-    text,
-  }: {
-    sourceLanguage?: LanguageCode;
-    targetLanguage: LanguageCode;
-    text: string;
-  }) => {
-    try {
-      const [sourceData, targetData] = await Promise.all([
-        getDirectusTermsAction(sourceLanguage),
-        getDirectusTermsAction(targetLanguage),
-      ]);
-
-      const sourceTerms = Object.values(sourceData).flat();
-      const targetTerms = Object.values(targetData).flat();
-
-      const targetTermMap = new Map(
-        targetTerms.map((term) => [term.id, term.name]),
-      );
-
-      const sourceLangName = languageNames[sourceLanguage] || sourceLanguage;
-      const targetLangName = languageNames[targetLanguage] || targetLanguage;
-
-      let prompt = `Please translate the following ${sourceLangName} text into ${targetLangName}.
-
-1. Provide only the translation without explanations or meta-commentary
-2. Maintain the original meaning and tone
-3. Use natural, fluent expressions
-4. **IMPORTANT**: Use the exact terminology translations provided below - do not translate these terms differently
-5. Keep the markdown formatting intact
-
-The following terms must be translated exactly as specified:
-
-`;
-
-      const termLines = sourceTerms
-        .map((term) => {
-          const targetName = targetTermMap.get(term.id);
-          if (!targetName) return null;
-          const pattern = createFullHalfWidthPattern(term.name);
-          const regex = new RegExp(pattern);
-          if (!regex.test(text)) return null;
-          return `- ${term.name} → ${targetName}`;
-        })
-        .filter((line): line is string => line !== null);
-
-      if (termLines.length > 0) {
-        prompt += termLines.join('\n') + '\n\n';
-      } else {
-        prompt += '(No terminology reference available)\n\n';
-      }
-
-      prompt += 'Text to Translate:\n\n';
-      prompt += text;
-
-      return prompt;
-    } catch {
-      throw new Error('Failed to fetch terms from Directus');
-    }
-  };
-
   const copyPrompt = () => {
     setLoading(true);
 
-    // Pass the promise directly to ClipboardItem to maintain user interaction context
-    const textPromise = generatePrompt({ targetLanguage, text: content }).then(
-      (prompt) => new Blob([prompt], { type: 'text/plain' }),
-    );
+    const textPromise = generateTranslationPrompt({
+      targetLanguage,
+      text: content,
+    }).then((prompt) => new Blob([prompt], { type: 'text/plain' }));
 
     navigator.clipboard
       .write([new ClipboardItem({ 'text/plain': textPromise })])
