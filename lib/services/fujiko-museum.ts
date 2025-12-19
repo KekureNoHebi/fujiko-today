@@ -15,7 +15,22 @@ const BASE_URL = 'https://fujiko-museum.com';
 const API_URL = `${BASE_URL}/wp-json/wp/v2`;
 const turndownService = createTurndownService(BASE_URL);
 
-interface WordPressBlogPost {
+export function convertPostContentToMarkdown(htmlContent: string): string {
+  const $ = cheerio.load(htmlContent);
+  $('[src]').each((_, element) => {
+    const src = $(element).attr('src');
+    if (src && src.startsWith('https://1.1.97.241/administrator')) {
+      const newSrc = src.replace(
+        'https://1.1.97.241/administrator',
+        'https://fujiko-museum.com',
+      );
+      $(element).attr('src', newSrc);
+    }
+  });
+  return turndownService.turndown($.html() || '');
+}
+
+export interface WordPressBlogPost {
   id: number;
   date: string;
   modified: string;
@@ -186,19 +201,7 @@ export async function getPost({ postId }: { postId: number }) {
   }
 
   const post: WordPressBlogPost = await response.json();
-  const $ = cheerio.load(post.content.rendered || '');
-  $('[src]').each((_, element) => {
-    const src = $(element).attr('src');
-    if (src && src.startsWith('https://1.1.97.241/administrator')) {
-      const newSrc = src.replace(
-        'https://1.1.97.241/administrator',
-        'https://fujiko-museum.com',
-      );
-      $(element).attr('src', newSrc);
-    }
-  });
-  const markdown = turndownService.turndown($.html() || '');
-  return markdown;
+  return convertPostContentToMarkdown(post.content.rendered || '');
 }
 
 export async function getPostWithFallback({

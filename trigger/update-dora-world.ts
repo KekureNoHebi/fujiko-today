@@ -1,13 +1,13 @@
 import { logger, schedules } from '@trigger.dev/sdk';
-import { main } from '../scripts/update-contents';
-import { translateContentTask } from './translate-content';
+import { main } from '@/scripts/update-dora-world';
+import { translateContentTask } from '@/trigger/translate-content';
 
-export const updateContentsTask = schedules.task({
-  id: 'update-contents',
+export const updateDoraWorldTask = schedules.task({
+  id: 'update-dora-world',
   cron: { pattern: '0 0,6-23 * * *', timezone: 'Asia/Tokyo' },
   maxDuration: 300,
   run: async (payload) => {
-    logger.log('Starting scheduled content update', {
+    logger.log('Starting scheduled dora-world update', {
       timestamp: payload.timestamp,
       lastRun: payload.lastTimestamp,
       nextRuns: payload.upcoming,
@@ -16,7 +16,7 @@ export const updateContentsTask = schedules.task({
     try {
       const result = await main();
 
-      logger.log('Content update completed', {
+      logger.log('dora-world update completed', {
         processedCount: result.processedCount,
         changedCount: result.changedCount,
         rawFilesUpdated: result.rawFilesUpdated,
@@ -29,7 +29,6 @@ export const updateContentsTask = schedules.task({
           count: result.translationPayloads.length,
         });
 
-        let successCount = 0;
         let failureCount = 0;
 
         for (let i = 0; i < result.translationPayloads.length; i++) {
@@ -42,19 +41,7 @@ export const updateContentsTask = schedules.task({
               uploadPath: payload.uploadPath,
             });
 
-            const run = await translateContentTask.triggerAndWait(payload);
-
-            if (run.ok) {
-              successCount++;
-              logger.log(`${progress} Translation task succeeded`, {
-                output: run.output,
-              });
-            } else {
-              failureCount++;
-              logger.error(`${progress} Translation task failed`, {
-                error: run.error,
-              });
-            }
+            translateContentTask.trigger(payload);
           } catch (error) {
             failureCount++;
             logger.error(`${progress} Translation task threw error`, {
@@ -65,7 +52,6 @@ export const updateContentsTask = schedules.task({
 
         logger.log('Translation tasks completed', {
           total: result.translationPayloads.length,
-          succeeded: successCount,
           failed: failureCount,
         });
 
@@ -73,7 +59,6 @@ export const updateContentsTask = schedules.task({
           ...result,
           translationResults: {
             total: result.translationPayloads.length,
-            succeeded: successCount,
             failed: failureCount,
           },
         };
@@ -81,7 +66,7 @@ export const updateContentsTask = schedules.task({
 
       return result;
     } catch (error) {
-      logger.error('Content update failed', { error });
+      logger.error('dora-world update failed', { error });
       throw error;
     }
   },

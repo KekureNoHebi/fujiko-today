@@ -4,7 +4,7 @@ import { fetchDirectusTerms } from '@/lib/services/directus-terms';
 import { defaultGitHubConfig, fetchFile } from '@/lib/services/github-api';
 import { translateContentSchema } from '@/lib/schemas/translate-content';
 import { languageNames } from '@/lib/constants/term';
-import { commitToGitHubTask } from './commit-to-github';
+import { commitToGitHubTask } from '@/trigger/commit-to-github';
 import { replaceTermsWithPlaceholders } from '@/lib/utils/content-helpers';
 
 export const translateContentTask = schemaTask({

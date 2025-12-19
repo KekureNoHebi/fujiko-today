@@ -11,7 +11,7 @@ import {
 } from '@/lib/utils/content-helpers';
 import { defaultGitHubConfig, fetchFile } from '@/lib/services/github-api';
 
-const BASE_URL = 'https://www.dora-world.com';
+export const BASE_URL = 'https://www.dora-world.com';
 const turndownService = createTurndownService(BASE_URL);
 
 interface NextData {
@@ -53,6 +53,16 @@ export async function fetchBuildId(): Promise<string> {
   }
   const nextData: NextData = JSON.parse(nextDataScript);
   return nextData.buildId;
+}
+
+export async function fetchContentDetail(
+  nextBuildId: string,
+  contentId: number,
+) {
+  const response = await fetch(
+    `${BASE_URL}/_next/data/${nextBuildId}/contents/${contentId}.json`,
+  );
+  return await response.json();
 }
 
 export async function fetchContentsFromDirectus({

@@ -1,10 +1,5 @@
 import * as path from 'path';
 import {
-  fetchBuildId,
-  fetchContents,
-  processContentHtmlToMarkdown,
-} from '../lib/services/dora-world';
-import {
   FileUpdate,
   fetchFile,
   batchUpdateFiles,
@@ -14,8 +9,13 @@ import { LANGUAGE_CODES, type LanguageCode } from '@/lib/types/term';
 import type { TranslateContentPayload } from '@/lib/schemas/translate-content';
 import client from '@/lib/api/client';
 import type { components } from '@/lib/api/v1';
+import {
+  fetchPosts,
+  WordPressBlogPost,
+  convertPostContentToMarkdown,
+} from '@/lib/services/fujiko-museum';
 
-interface UpdateContentsResult {
+interface UpdateFujikoMuseumResult {
   processedCount: number;
   changedCount: number;
   rawFilesUpdated: number;
@@ -25,9 +25,6 @@ interface UpdateContentsResult {
   directusCreated: number;
   directusUpdated: number;
 }
-
-const BASE_URL = 'https://www.dora-world.com';
-const LATEST_COUNT = 30;
 
 const RAW_REPO = {
   owner: process.env.GITHUB_CONTENT_OWNER || '',
@@ -40,34 +37,11 @@ const TARGET_LANGUAGES = LANGUAGE_CODES.filter(
   (lang) => lang !== 'ja',
 ) as LanguageCode[];
 
-const PROPERTIES_TO_REMOVE = [
-  'flg_hot',
-  'flg_pr',
-  'flg_new',
-  'flg_window',
-  'flg_terminated',
-] as const;
-
-type DirectusContent = components['schemas']['ItemsDoraWorldContents'];
+type DirectusContent = components['schemas']['ItemsFujikoMuseumContents'];
 
 function convertJSTtoUTC(jstTime: string): string {
   const date = new Date(jstTime + '+09:00');
   return date.toISOString();
-}
-
-interface ContentMetadata {
-  id: number;
-  title: string;
-  flg_hot?: boolean;
-  flg_pr?: boolean;
-  flg_new?: boolean;
-  flg_window?: boolean;
-  flg_terminated?: boolean;
-  publish_at?: string;
-  page_url?: string;
-  image_url?: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
 const hasContentChanged = async (
@@ -89,60 +63,21 @@ const hasContentChanged = async (
   return false;
 };
 
-function removeProperties(obj: ContentMetadata): Record<string, unknown> {
-  const cleaned = { ...obj };
-  for (const prop of PROPERTIES_TO_REMOVE) {
-    delete cleaned[prop];
-  }
-  return cleaned;
-}
-
-async function fetchContentDetail(nextBuildId: string, contentId: number) {
-  const response = await fetch(
-    `${BASE_URL}/_next/data/${nextBuildId}/contents/${contentId}.json`,
-  );
-  return await response.json();
-}
-
-async function processContent(
-  buildId: string,
-  metadata: ContentMetadata,
-): Promise<{
+async function processPost(post: WordPressBlogPost): Promise<{
   json: FileUpdate;
   jsonChanged: boolean;
   markdown?: FileUpdate;
   markdownChanged: boolean;
-  contentId: number;
+  postId: number;
 }> {
-  const contentId = metadata.id;
-
-  const cleanedMetadata = removeProperties(metadata);
-
-  let merged: Record<string, unknown>;
-  let detail;
-
-  try {
-    detail = await fetchContentDetail(buildId, contentId);
-
-    merged = {
-      ...cleanedMetadata,
-      pageProps: {
-        content: detail.pageProps.content,
-      },
-    };
-  } catch {
-    console.log(
-      `  ⚠️  Failed to fetch detail for ${contentId}, saving without pageProps`,
-    );
-    merged = cleanedMetadata;
-  }
+  const postId = post.id;
 
   const jsonPath = path.join(
-    '/dora-world/contents',
-    contentId.toString(),
-    'content.json',
+    '/fujiko-museum/blog',
+    postId.toString(),
+    'post.json',
   );
-  const jsonContent = JSON.stringify(merged, null, 2);
+  const jsonContent = JSON.stringify(post, null, 2);
   const jsonOutput: FileUpdate = {
     path: jsonPath,
     content: jsonContent,
@@ -153,28 +88,26 @@ async function processContent(
   let markdownOutput: FileUpdate | undefined;
   let markdownChanged = false;
 
-  if (detail) {
-    const htmlContent = detail.pageProps?.content?.content;
-    if (htmlContent) {
-      const markdown = processContentHtmlToMarkdown(htmlContent);
+  const htmlContent = post.content.rendered;
+  if (htmlContent) {
+    const markdown = convertPostContentToMarkdown(htmlContent);
 
-      const markdownPath = path.join(
-        '/dora-world/contents',
-        contentId.toString(),
-        'ja',
-        'content.md',
-      );
-      markdownOutput = {
-        path: markdownPath,
-        content: markdown,
-      };
+    const markdownPath = path.join(
+      '/fujiko-museum/blog',
+      postId.toString(),
+      'ja',
+      'content.md',
+    );
+    markdownOutput = {
+      path: markdownPath,
+      content: markdown,
+    };
 
-      markdownChanged = await hasContentChanged(
-        markdownPath,
-        markdown,
-        defaultGitHubConfig,
-      );
-    }
+    markdownChanged = await hasContentChanged(
+      markdownPath,
+      markdown,
+      defaultGitHubConfig,
+    );
   }
 
   return {
@@ -182,30 +115,29 @@ async function processContent(
     jsonChanged,
     markdown: markdownOutput,
     markdownChanged,
-    contentId,
+    postId,
   };
 }
 
 async function createContent(
-  metadata: ContentMetadata,
+  post: WordPressBlogPost,
 ): Promise<{ success: boolean; error?: unknown }> {
   try {
-    const contentId = metadata.id.toString();
-    const title = metadata.title;
-    const publishAt = metadata.publish_at;
-    const pageUrl = metadata.page_url;
-    const imageUrl = metadata.image_url;
-    const createdAt = metadata.created_at;
-    const updatedAt = metadata.updated_at;
+    const postId = post.id.toString();
+    const title = post.title.rendered;
+    const link = post.link;
+    const thumbnail = post.thumbnail?.url;
+    const datePublished = post.date;
+    const dateModified = post.modified;
 
     const payload: DirectusContent = {
-      id: contentId,
+      id: postId,
       status: 'published',
-      page_url: pageUrl || '',
-      image_url: imageUrl || '',
-      date_published: publishAt ? convertJSTtoUTC(publishAt) : undefined,
-      date_created: createdAt,
-      date_updated: updatedAt,
+      link: link || '',
+      thumbnail: thumbnail || null,
+      date_published: convertJSTtoUTC(datePublished),
+      date_created: convertJSTtoUTC(dateModified),
+      date_updated: convertJSTtoUTC(dateModified),
       translations: [
         {
           languages_code: 'ja',
@@ -214,7 +146,7 @@ async function createContent(
       ],
     };
 
-    const { error } = await client.POST('/items/dora_world_contents', {
+    const { error } = await client.POST('/items/fujiko_museum_contents', {
       body: payload,
     });
 
@@ -229,32 +161,31 @@ async function createContent(
 }
 
 async function updateContent(
-  metadata: ContentMetadata,
+  post: WordPressBlogPost,
 ): Promise<{ success: boolean; error?: unknown }> {
   try {
-    const contentId = metadata.id.toString();
-    const title = metadata.title;
-    const publishAt = metadata.publish_at;
-    const pageUrl = metadata.page_url;
-    const imageUrl = metadata.image_url;
-    const createdAt = metadata.created_at;
-    const updatedAt = metadata.updated_at;
+    const postId = post.id.toString();
+    const title = post.title.rendered;
+    const link = post.link;
+    const thumbnail = post.thumbnail?.url;
+    const datePublished = post.date;
+    const dateModified = post.modified;
 
     const contentPayload: DirectusContent = {
-      id: contentId,
+      id: postId,
       status: 'published',
-      page_url: pageUrl || '',
-      image_url: imageUrl || '',
-      date_published: publishAt ? convertJSTtoUTC(publishAt) : undefined,
-      date_created: createdAt,
-      date_updated: updatedAt,
+      link: link || '',
+      thumbnail: thumbnail || null,
+      date_published: convertJSTtoUTC(datePublished),
+      date_created: convertJSTtoUTC(dateModified),
+      date_updated: convertJSTtoUTC(dateModified),
     };
 
     const { error: contentError } = await client.PATCH(
-      '/items/dora_world_contents/{id}',
+      '/items/fujiko_museum_contents/{id}',
       {
         params: {
-          path: { id: contentId },
+          path: { id: postId },
         },
         body: contentPayload,
       },
@@ -266,13 +197,13 @@ async function updateContent(
 
     const filterQuery = JSON.stringify({
       _and: [
-        { dora_world_contents_id: { _eq: contentId } },
+        { fujiko_museum_contents_id: { _eq: postId } },
         { languages_code: { _eq: 'ja' } },
       ],
     });
 
     const { data: translationsData } = await client.GET(
-      '/items/dora_world_contents_translations',
+      '/items/fujiko_museum_contents_translations',
       {
         params: {
           query: {
@@ -285,20 +216,20 @@ async function updateContent(
     const existingTranslation = translationsData?.data?.[0];
 
     if (existingTranslation?.id) {
-      await client.PATCH('/items/dora_world_contents_translations/{id}', {
+      await client.PATCH('/items/fujiko_museum_contents_translations/{id}', {
         params: {
           path: { id: existingTranslation.id },
         },
         body: {
-          dora_world_contents_id: contentId,
+          fujiko_museum_contents_id: postId,
           languages_code: 'ja',
           title: title,
         },
       });
     } else {
-      await client.POST('/items/dora_world_contents_translations', {
+      await client.POST('/items/fujiko_museum_contents_translations', {
         body: {
-          dora_world_contents_id: contentId,
+          fujiko_museum_contents_id: postId,
           languages_code: 'ja',
           title: title,
         },
@@ -311,18 +242,11 @@ async function updateContent(
   }
 }
 
-async function main(): Promise<UpdateContentsResult> {
-  const buildId = await fetchBuildId();
-  const data = await fetchContents({
-    nextBuildId: buildId,
-    topic: 'contents',
-    page: 1,
-  });
+async function main(): Promise<UpdateFujikoMuseumResult> {
+  const { posts, totalPosts } = await fetchPosts({ page: 1 });
 
-  const contents = data.contents;
-
-  if (!contents || contents.length === 0) {
-    console.log('⚠️  No contents found.');
+  if (!posts || posts.length === 0) {
+    console.log('⚠️  No posts found.');
     return {
       processedCount: 0,
       changedCount: 0,
@@ -335,9 +259,9 @@ async function main(): Promise<UpdateContentsResult> {
     };
   }
 
-  const latestContents = contents.slice(0, LATEST_COUNT);
-
-  console.log(`Processing ${latestContents.length} contents...\n`);
+  console.log(
+    `Processing ${posts.length} posts (total: ${totalPosts || 'unknown'})...\n`,
+  );
 
   const rawRepoFiles: FileUpdate[] = [];
   const contentsRepoFiles: FileUpdate[] = [];
@@ -346,44 +270,44 @@ async function main(): Promise<UpdateContentsResult> {
   let directusCreated = 0;
   let directusUpdated = 0;
 
-  for (let i = 0; i < latestContents.length; i++) {
-    const content = latestContents[i];
-    const progress = `[${i + 1}/${latestContents.length}]`;
+  for (let i = 0; i < posts.length; i++) {
+    const post = posts[i];
+    const progress = `[${i + 1}/${posts.length}]`;
 
     try {
-      console.log(`${progress} Processing content ${content.id}...`);
-      const result = await processContent(buildId, content);
+      console.log(`${progress} Processing post ${post.id}...`);
+      const result = await processPost(post);
 
-      const createResult = await createContent(content);
-      if (createResult.success) {
-        directusCreated++;
-        console.log(`  ✓ Created in Directus: ${content.id}`);
+      const updateResult = await updateContent(post);
+      if (updateResult.success) {
+        directusUpdated++;
+        console.log(`  ✓ Updated in Directus: ${post.id}`);
       } else {
-        const updateResult = await updateContent(content);
-        if (updateResult.success) {
-          directusUpdated++;
-          console.log(`  ✓ Updated in Directus: ${content.id}`);
+        const createResult = await createContent(post);
+        if (createResult.success) {
+          directusCreated++;
+          console.log(`  ✓ Created in Directus: ${post.id}`);
         } else {
           console.error(
-            `  ⚠️  Failed to create/update in Directus for content ${content.id}:`,
-            updateResult.error,
+            `  ⚠️  Failed to update/create in Directus for post ${post.id}:`,
+            createResult.error,
           );
         }
       }
 
       if (result.jsonChanged) {
         rawRepoFiles.push(result.json);
-        console.log(`  ✓ JSON changed for content ${content.id}`);
+        console.log(`  ✓ JSON changed for post ${post.id}`);
       }
 
       if (result.markdownChanged && result.markdown) {
         contentsRepoFiles.push(result.markdown);
-        console.log(`  ✓ Markdown changed for content ${content.id}`);
+        console.log(`  ✓ Markdown changed for post ${post.id}`);
 
         for (const targetLang of TARGET_LANGUAGES) {
           const uploadPath = path.join(
-            '/dora-world/contents',
-            result.contentId.toString(),
+            '/fujiko-museum/blog',
+            result.postId.toString(),
             targetLang,
             'content.md',
           );
@@ -394,25 +318,25 @@ async function main(): Promise<UpdateContentsResult> {
             targetLanguage: targetLang,
             uploadPath,
             uploadSourcePath: result.markdown.path,
-            revalidatePath: `/${targetLang}/dora-world/contents/${result.contentId}`,
+            revalidatePath: `/${targetLang}/fujiko-museum/blog/${result.postId}`,
           });
         }
       }
 
       if (result.jsonChanged || result.markdownChanged) {
-        changedContentIds.push(result.contentId);
+        changedContentIds.push(result.postId);
       }
 
-      if (i < latestContents.length - 1) {
+      if (i < posts.length - 1) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     } catch (error) {
-      console.error(`${progress} ❌ Failed to process ${content.id}:`, error);
+      console.error(`${progress} ❌ Failed to process ${post.id}:`, error);
     }
   }
 
-  console.log(`  Total processed: ${latestContents.length}`);
-  console.log(`  Changed contents: ${changedContentIds.length}`);
+  console.log(`  Total processed: ${posts.length}`);
+  console.log(`  Changed posts: ${changedContentIds.length}`);
   console.log(`  RAW repo files to update: ${rawRepoFiles.length}`);
   console.log(`  CONTENTS repo files to update: ${contentsRepoFiles.length}`);
   console.log(
@@ -422,7 +346,7 @@ async function main(): Promise<UpdateContentsResult> {
   console.log(`  Directus updated: ${directusUpdated}`);
 
   if (changedContentIds.length > 0) {
-    console.log(`  Changed content IDs: ${changedContentIds.join(', ')}`);
+    console.log(`  Changed post IDs: ${changedContentIds.join(', ')}`);
   }
 
   if (rawRepoFiles.length > 0) {
@@ -430,7 +354,7 @@ async function main(): Promise<UpdateContentsResult> {
       const rawCommit = await batchUpdateFiles({
         ...RAW_REPO,
         files: rawRepoFiles,
-        message: `Update ${rawRepoFiles.length} dora-world contents\n\nContent IDs: ${changedContentIds.join(', ')}`,
+        message: `Update ${rawRepoFiles.length} fujiko-museum posts\n\nPost IDs: ${changedContentIds.join(', ')}`,
       });
       console.log(`  ✓ RAW repo committed: ${rawCommit.sha}`);
     } catch (error) {
@@ -443,7 +367,7 @@ async function main(): Promise<UpdateContentsResult> {
       const contentsCommit = await batchUpdateFiles({
         ...defaultGitHubConfig,
         files: contentsRepoFiles,
-        message: `Update ${contentsRepoFiles.length} dora-world contents\n\nContent IDs: ${changedContentIds.join(', ')}`,
+        message: `Update ${contentsRepoFiles.length} fujiko-museum posts\n\nPost IDs: ${changedContentIds.join(', ')}`,
       });
       console.log(`  ✓ CONTENTS repo committed: ${contentsCommit.sha}`);
     } catch (error) {
@@ -452,7 +376,7 @@ async function main(): Promise<UpdateContentsResult> {
   }
 
   return {
-    processedCount: latestContents.length,
+    processedCount: posts.length,
     changedCount: changedContentIds.length,
     rawFilesUpdated: rawRepoFiles.length,
     contentFilesUpdated: contentsRepoFiles.length,
@@ -464,4 +388,4 @@ async function main(): Promise<UpdateContentsResult> {
 }
 
 export { main };
-export type { UpdateContentsResult };
+export type { UpdateFujikoMuseumResult };

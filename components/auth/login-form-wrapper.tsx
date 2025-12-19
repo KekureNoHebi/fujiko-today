@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LoginForm } from './login-form';
+import { LoginForm } from '@/components/auth/login-form';
 
 interface LoginFormWrapperProps {
   locale: string;
