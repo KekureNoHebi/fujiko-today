@@ -1,3 +1,11 @@
+import {
+  OPENROUTER_API_URL,
+  TRANSLATION_MODELS,
+  buildTranslationRequestBody,
+  getOpenRouterApiKey,
+  buildOpenRouterHeaders,
+} from '@/lib/services/translation/openrouter';
+
 export interface TranslateContentInput {
   text: string;
   targetLanguage: string;
@@ -7,50 +15,27 @@ export interface TranslateContentInput {
 export async function translateContent(
   input: TranslateContentInput,
 ): Promise<string> {
-  const { text, targetLanguage, model = 'z-ai/glm-4.5-air:free' } = input;
+  const {
+    text,
+    targetLanguage,
+    model = TRANSLATION_MODELS.withThinking,
+  } = input;
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY is not configured');
-  }
+  const apiKey = getOpenRouterApiKey();
 
-  const response = await fetch(
-    'https://openrouter.ai/api/v1/chat/completions',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: 'system',
-            content: `You are a professional translator specializing in Japanese cultural content.
+  const requestBody = buildTranslationRequestBody({
+    text,
+    targetLanguageName: targetLanguage,
+    enableThinking: true,
+    stream: false,
+    model,
+  });
 
-Translate the following content into ${targetLanguage}:
-
-Requirements:
-1. Provide only the translation without explanations or meta-commentary
-2. Preserve all placeholders in the exact format {{type.id}} (e.g., {{character.example}}, {{work.example}}) - do not translate or modify them
-3. Maintain all Markdown formatting (headings, links, lists, bold, italic, etc.)
-4. Produce natural, fluent translations appropriate for the target language
-5. Preserve the original meaning and tone
-
-Output only the translated text.`,
-          },
-          {
-            role: 'user',
-            content: text,
-          },
-        ],
-        reasoning: {
-          enabled: true,
-        },
-      }),
-    },
-  );
+  const response = await fetch(OPENROUTER_API_URL, {
+    method: 'POST',
+    headers: buildOpenRouterHeaders(apiKey),
+    body: JSON.stringify(requestBody),
+  });
 
   if (!response.ok) {
     const errorText = await response.text();

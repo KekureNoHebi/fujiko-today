@@ -1,4 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  OPENROUTER_API_URL,
+  buildTranslationRequestBody,
+  getOpenRouterApiKey,
+  buildOpenRouterHeaders,
+} from '@/lib/services/translation/openrouter';
 
 export const runtime = 'edge';
 
@@ -21,63 +27,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) {
+    let apiKey: string;
+    try {
+      apiKey = getOpenRouterApiKey();
+    } catch (error) {
       return NextResponse.json(
-        { error: 'OPENROUTER_API_KEY is not configured' },
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : 'API key configuration error',
+        },
         { status: 500 },
       );
     }
 
-    // Use different models based on thinking mode
-    const model = enableThinking
-      ? 'z-ai/glm-4.5-air:free'
-      : 'mistralai/devstral-2512:free';
-
-    const requestBody: Record<string, unknown> = {
-      model,
-      messages: [
-        {
-          role: 'system',
-          content: `You are a professional translator specializing in Japanese cultural content.
-
-Translate the following content into ${targetLanguageName}:
-
-Requirements:
-1. Provide only the translation without explanations or meta-commentary
-2. Preserve all placeholders in the exact format {{type.id}} (e.g., {{character.example}}, {{work.example}}) - do not translate or modify them
-3. Maintain all Markdown formatting (headings, links, lists, bold, italic, etc.)
-4. Produce natural, fluent translations appropriate for the target language
-5. Preserve the original meaning and tone
-
-Output only the translated text.`,
-        },
-        {
-          role: 'user',
-          content: text,
-        },
-      ],
+    const requestBody = buildTranslationRequestBody({
+      text,
+      targetLanguageName,
+      enableThinking,
       stream: true,
-    };
+    });
 
-    // Only add reasoning config for thinking-capable models
-    if (enableThinking) {
-      requestBody.reasoning = {
-        enabled: true,
-      };
-    }
-
-    const response = await fetch(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      },
-    );
+    const response = await fetch(OPENROUTER_API_URL, {
+      method: 'POST',
+      headers: buildOpenRouterHeaders(apiKey),
+      body: JSON.stringify(requestBody),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -89,7 +65,6 @@ Output only the translated text.`,
       );
     }
 
-    // Return the streaming response
     return new NextResponse(response.body, {
       headers: {
         'Content-Type': 'text/event-stream',

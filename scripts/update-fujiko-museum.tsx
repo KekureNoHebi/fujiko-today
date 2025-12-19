@@ -75,7 +75,7 @@ async function processPost(post: WordPressBlogPost): Promise<{
   const jsonPath = path.join(
     '/fujiko-museum/blog',
     postId.toString(),
-    'post.json',
+    'content.json',
   );
   const jsonContent = JSON.stringify(post, null, 2);
   const jsonOutput: FileUpdate = {
