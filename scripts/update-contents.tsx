@@ -12,6 +12,8 @@ import {
 } from '@/lib/services/github-api';
 import { LANGUAGE_CODES, type LanguageCode } from '@/lib/types/term';
 import type { TranslateContentPayload } from '@/lib/schemas/translate-content';
+import client from '@/lib/api/client';
+import type { components } from '@/lib/api/v1';
 
 interface UpdateContentsResult {
   processedCount: number;
@@ -20,6 +22,8 @@ interface UpdateContentsResult {
   contentFilesUpdated: number;
   translationPayloads: TranslateContentPayload[];
   changedContentIds: number[];
+  directusCreated: number;
+  directusUpdated: number;
 }
 
 const BASE_URL = 'https://www.dora-world.com';
@@ -44,13 +48,26 @@ const PROPERTIES_TO_REMOVE = [
   'flg_terminated',
 ] as const;
 
+type DirectusContent = components['schemas']['ItemsDoraWorldContents'];
+
+function convertJSTtoUTC(jstTime: string): string {
+  const date = new Date(jstTime + '+09:00');
+  return date.toISOString();
+}
+
 interface ContentMetadata {
   id: number;
+  title: string;
   flg_hot?: boolean;
   flg_pr?: boolean;
   flg_new?: boolean;
   flg_window?: boolean;
   flg_terminated?: boolean;
+  publish_at?: string;
+  page_url?: string;
+  image_url?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const hasContentChanged = async (
@@ -169,6 +186,131 @@ async function processContent(
   };
 }
 
+async function createContent(
+  metadata: ContentMetadata,
+): Promise<{ success: boolean; error?: unknown }> {
+  try {
+    const contentId = metadata.id.toString();
+    const title = metadata.title;
+    const publishAt = metadata.publish_at;
+    const pageUrl = metadata.page_url;
+    const imageUrl = metadata.image_url;
+    const createdAt = metadata.created_at;
+    const updatedAt = metadata.updated_at;
+
+    const payload: DirectusContent = {
+      id: contentId,
+      status: 'published',
+      page_url: pageUrl || '',
+      image_url: imageUrl || '',
+      date_published: publishAt ? convertJSTtoUTC(publishAt) : undefined,
+      date_created: createdAt,
+      date_updated: updatedAt,
+      translations: [
+        {
+          languages_code: 'ja',
+          title: title,
+        },
+      ],
+    };
+
+    const { error } = await client.POST('/items/dora_world_contents', {
+      body: payload,
+    });
+
+    if (error) {
+      return { success: false, error };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error };
+  }
+}
+
+async function updateContent(
+  metadata: ContentMetadata,
+): Promise<{ success: boolean; error?: unknown }> {
+  try {
+    const contentId = metadata.id.toString();
+    const title = metadata.title;
+    const publishAt = metadata.publish_at;
+    const pageUrl = metadata.page_url;
+    const imageUrl = metadata.image_url;
+    const createdAt = metadata.created_at;
+    const updatedAt = metadata.updated_at;
+
+    const contentPayload: DirectusContent = {
+      id: contentId,
+      status: 'published',
+      page_url: pageUrl || '',
+      image_url: imageUrl || '',
+      date_published: publishAt ? convertJSTtoUTC(publishAt) : undefined,
+      date_created: createdAt,
+      date_updated: updatedAt,
+    };
+
+    const { error: contentError } = await client.PATCH(
+      '/items/dora_world_contents/{id}',
+      {
+        params: {
+          path: { id: contentId },
+        },
+        body: contentPayload,
+      },
+    );
+
+    if (contentError) {
+      return { success: false, error: contentError };
+    }
+
+    const filterQuery = JSON.stringify({
+      _and: [
+        { dora_world_contents_id: { _eq: contentId } },
+        { languages_code: { _eq: 'ja' } },
+      ],
+    });
+
+    const { data: translationsData } = await client.GET(
+      '/items/dora_world_contents_translations',
+      {
+        params: {
+          query: {
+            filter: filterQuery,
+          },
+        },
+      },
+    );
+
+    const existingTranslation = translationsData?.data?.[0];
+
+    if (existingTranslation?.id) {
+      await client.PATCH('/items/dora_world_contents_translations/{id}', {
+        params: {
+          path: { id: existingTranslation.id },
+        },
+        body: {
+          dora_world_contents_id: contentId,
+          languages_code: 'ja',
+          title: title,
+        },
+      });
+    } else {
+      await client.POST('/items/dora_world_contents_translations', {
+        body: {
+          dora_world_contents_id: contentId,
+          languages_code: 'ja',
+          title: title,
+        },
+      });
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error };
+  }
+}
+
 async function main(): Promise<UpdateContentsResult> {
   const buildId = await fetchBuildId();
   const data = await fetchContents({
@@ -188,6 +330,8 @@ async function main(): Promise<UpdateContentsResult> {
       contentFilesUpdated: 0,
       translationPayloads: [],
       changedContentIds: [],
+      directusCreated: 0,
+      directusUpdated: 0,
     };
   }
 
@@ -199,6 +343,8 @@ async function main(): Promise<UpdateContentsResult> {
   const contentsRepoFiles: FileUpdate[] = [];
   const changedContentIds: number[] = [];
   const translationPayloads: TranslateContentPayload[] = [];
+  let directusCreated = 0;
+  let directusUpdated = 0;
 
   for (let i = 0; i < latestContents.length; i++) {
     const content = latestContents[i];
@@ -207,6 +353,23 @@ async function main(): Promise<UpdateContentsResult> {
     try {
       console.log(`${progress} Processing content ${content.id}...`);
       const result = await processContent(buildId, content);
+
+      const createResult = await createContent(content);
+      if (createResult.success) {
+        directusCreated++;
+        console.log(`  ✓ Created in Directus: ${content.id}`);
+      } else {
+        const updateResult = await updateContent(content);
+        if (updateResult.success) {
+          directusUpdated++;
+          console.log(`  ✓ Updated in Directus: ${content.id}`);
+        } else {
+          console.error(
+            `  ⚠️  Failed to create/update in Directus for content ${content.id}:`,
+            updateResult.error,
+          );
+        }
+      }
 
       if (result.jsonChanged) {
         rawRepoFiles.push(result.json);
@@ -255,6 +418,8 @@ async function main(): Promise<UpdateContentsResult> {
   console.log(
     `  Translation payloads to create: ${translationPayloads.length}`,
   );
+  console.log(`  Directus created: ${directusCreated}`);
+  console.log(`  Directus updated: ${directusUpdated}`);
 
   if (changedContentIds.length > 0) {
     console.log(`  Changed content IDs: ${changedContentIds.join(', ')}`);
@@ -293,6 +458,8 @@ async function main(): Promise<UpdateContentsResult> {
     contentFilesUpdated: contentsRepoFiles.length,
     translationPayloads,
     changedContentIds,
+    directusCreated,
+    directusUpdated,
   };
 }
 

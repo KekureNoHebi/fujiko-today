@@ -1,4 +1,4 @@
-import { TermsManager } from '@/components/terms-manager/terms-manager';
+import { TermsManager } from '@/components/term/terms-manager';
 import type { LanguageCode } from '@/lib/types/term';
 
 interface TermsPageProps {

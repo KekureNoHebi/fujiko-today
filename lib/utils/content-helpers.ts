@@ -38,31 +38,34 @@ export function replaceTermsWithPlaceholders(
 }
 
 export function createFullHalfWidthPattern(text: string): string {
-  return escapeRegExp(text)
-    .split('')
-    .map((char) => {
-      const code = char.charCodeAt(0);
+  if (!text || !text.trim()) {
+    return '';
+  }
 
-      if (code >= 0x20 && code <= 0x7e) {
-        const fullWidth = String.fromCharCode(code + 0xfee0);
-        return `[${escapeRegExp(char)}${escapeRegExp(fullWidth)}]`;
-      }
+  const parts = Array.from(text).map((char) => {
+    if (/\s/.test(char) || char === '\u3000') {
+      return null;
+    }
 
-      if (code >= 0xff00 && code <= 0xff5e) {
-        const halfWidth = String.fromCharCode(code - 0xfee0);
-        return `[${escapeRegExp(char)}${escapeRegExp(halfWidth)}]`;
-      }
+    const code = char.charCodeAt(0);
+    const variants = new Set<string>();
 
-      if (char === '\u3000') {
-        return '[\u3000 ]';
-      }
-      if (char === ' ') {
-        return '[ \u3000]';
-      }
+    variants.add(escapeRegExp(char));
 
-      return escapeRegExp(char);
-    })
-    .join('');
+    if (code >= 0x0021 && code <= 0x007e) {
+      variants.add(escapeRegExp(String.fromCharCode(code + 0xfee0)));
+    } else if (code >= 0xff01 && code <= 0xff5e) {
+      variants.add(escapeRegExp(String.fromCharCode(code - 0xfee0)));
+    }
+
+    const vArray = Array.from(variants);
+    if (vArray.length === 1) {
+      return vArray[0];
+    }
+    return `(?:${vArray.join('|')})`;
+  });
+
+  return parts.filter((p): p is string => p !== null).join('[ \\u3000]*');
 }
 
 export function replacePlaceholders(

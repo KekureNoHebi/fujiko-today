@@ -1,4 +1,4 @@
-import { TranslateTool } from '@/components/translate-tool/translate-tool';
+import { TranslateTool } from '@/components/translation/translate-tool';
 import type { LanguageCode } from '@/lib/types/term';
 
 interface TranslateToolPageProps {

@@ -31,8 +31,6 @@ import {
   replaceTermsWithPlaceholders,
   replacePlaceholders,
 } from '@/lib/utils/content-helpers';
-import { useTypewriter } from '@/hooks/use-typewriter';
-
 const availableLanguages = Object.keys(languageLabels) as LanguageCode[];
 
 interface TranslateToolProps {
@@ -50,8 +48,6 @@ export function TranslateTool({ locale }: TranslateToolProps) {
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const [enableThinking, setEnableThinking] = useState(false);
-
-  const displayedText = useTypewriter(translation, 5);
 
   const generatePrompt = async () => {
     if (!text.trim()) {
@@ -169,6 +165,7 @@ The following terms must be translated exactly as specified:
 
       const decoder = new TextDecoder();
       let buffer = '';
+      let rawTranslationAccumulator = '';
 
       while (true) {
         const { done, value } = await reader.read();
@@ -194,10 +191,12 @@ The following terms must be translated exactly as specified:
               }
 
               if (delta?.content) {
-                setTranslation((prev) => {
-                  const newContent = prev + delta.content;
-                  return replacePlaceholders(newContent, targetData);
-                });
+                rawTranslationAccumulator += delta.content;
+                const processed = replacePlaceholders(
+                  rawTranslationAccumulator,
+                  targetData,
+                );
+                setTranslation(processed);
               }
             } catch (e) {
               console.error('Parse error:', e);
@@ -289,7 +288,7 @@ The following terms must be translated exactly as specified:
               <Checkbox
                 id="enable-thinking"
                 checked={enableThinking}
-                onCheckedChange={(checked) =>
+                onCheckedChange={(checked: boolean) =>
                   setEnableThinking(checked === true)
                 }
               />
@@ -357,35 +356,26 @@ The following terms must be translated exactly as specified:
           </div>
 
           {thinkingContent && (
-            <Reasoning isStreaming={streaming} defaultOpen={true}>
-              <ReasoningTrigger />
-              <ReasoningContent>{thinkingContent}</ReasoningContent>
-            </Reasoning>
+            <div className="w-full min-w-0 overflow-hidden">
+              <Reasoning isStreaming={streaming} defaultOpen={true}>
+                <ReasoningTrigger />
+                <ReasoningContent>{thinkingContent}</ReasoningContent>
+              </Reasoning>
+            </div>
           )}
 
-          {/* Translation Result */}
-          {displayedText && (
+          {translation && (
             <div className="space-y-3">
               <div className="prose dark:prose-invert max-w-none">
-                <div className="whitespace-pre-wrap wrap-break-word">
-                  {displayedText.split('').map((char, index) => {
-                    // Handle newlines separately to preserve line breaks
-                    if (char === '\n') {
-                      return <br key={index} />;
-                    }
-                    return (
-                      <span
-                        key={index}
-                        className="inline-block animate-in fade-in duration-100"
-                      >
-                        {char}
-                      </span>
-                    );
-                  })}
+                <div className="whitespace-pre-wrap wrap-break-word min-h-8">
+                  {translation}
+                  {streaming && (
+                    <span className="inline-block w-2 h-4 ml-1 bg-current animate-pulse" />
+                  )}
                 </div>
               </div>
 
-              {!streaming && displayedText.length === translation.length && (
+              {!streaming && translation.length > 0 && (
                 <div className="flex gap-2">
                   <Button onClick={copyTranslation} variant="outline" size="sm">
                     <Copy className="mr-2 h-3.5 w-3.5" />
