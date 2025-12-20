@@ -17,12 +17,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { languageLabels } from '@/lib/constants/term';
+import { languageLabels, languageNames } from '@/lib/constants/term';
 import type { LanguageCode, SupportedTermType } from '@/lib/types/term';
 import type { TermWithAllLanguages } from '@/lib/services/directus-terms';
 import { getAllTermsWithAllLanguagesAction } from '@/lib/actions/term';
 import { ChevronDown } from 'lucide-react';
-import { generateTranslationPrompt } from '@/lib/utils/translation-prompt';
+import { buildPromptText } from '@/lib/utils/translation-prompt';
 
 const availableLanguages = Object.keys(languageLabels) as LanguageCode[];
 
@@ -117,31 +117,24 @@ export function TermsManager({ locale }: TermsManagerProps) {
     });
   };
 
-  const generatePrompt = async () => {
-    if (selectedTerms.size === 0) {
-      toast.error('Please select at least one term');
-      return;
-    }
-
-    return generateTranslationPrompt({
-      targetLanguage,
-      text: '',
-    });
-  };
-
   const copyPrompt = async () => {
-    const prompt = await generatePrompt();
-    if (!prompt) return;
+    const targetLangName = languageNames[targetLanguage] || targetLanguage;
 
-    navigator.clipboard
-      .writeText(prompt)
-      .then(() => {
-        toast.success('Prompt copied to clipboard!');
+    const allTerms = Object.values(terms).flat();
+
+    const termLines = allTerms
+      .filter((term) => selectedTerms.has(term.id))
+      .map((term) => {
+        const sourceName = term.translations[sourceLanguage];
+        const targetName = term.translations[targetLanguage];
+        if (!sourceName || !targetName) return null;
+        return `- ${sourceName} → ${targetName}`;
       })
-      .catch((error) => {
-        toast.error('Failed to copy prompt');
-        console.error('Copy error:', error);
-      });
+      .filter((line): line is string => line !== null);
+
+    const prompt = buildPromptText(targetLangName, termLines);
+    await navigator.clipboard.writeText(prompt);
+    toast.success('Prompt copied to clipboard');
   };
 
   const selectedCount = selectedTerms.size;

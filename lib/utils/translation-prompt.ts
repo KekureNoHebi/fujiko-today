@@ -3,11 +3,7 @@ import { languageNames } from '@/lib/constants/term';
 import { getDirectusTermsAction } from '@/lib/actions/term';
 import { createFullHalfWidthPattern } from '@/lib/utils/content-helpers';
 
-/**
- * Builds the prompt text
- * @internal - Use generateTranslationPrompt instead for most cases
- */
-function buildPromptText(
+export function buildPromptText(
   targetLangName: string,
   termLines: string[],
   text?: string,
