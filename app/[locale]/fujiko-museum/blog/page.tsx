@@ -6,6 +6,25 @@ import { ArticleCard } from '@/components/article/article-card';
 import { Pagination } from '@/components/navigation/pagination';
 import { T } from 'gt-next';
 import { checkAuth } from '@/lib/auth';
+import type { Metadata } from 'next';
+import { getGT } from 'gt-next/server';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getGT();
+  const metaTitle = t('Kawasaki City Fujiko・F・Fujio Museum — Latest Updates');
+  const metaDescription = t(
+    'Explore the latest updates, news, and blog posts from the Kawasaki City Fujiko・F・Fujio Museum.',
+  );
+
+  return {
+    title: metaTitle,
+    description: metaDescription,
+    openGraph: {
+      title: metaTitle,
+      description: metaDescription,
+    },
+  };
+}
 
 interface PageProps {
   params: Promise<{

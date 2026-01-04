@@ -1,17 +1,53 @@
 import {
   getContentWithFallback,
   fetchBuildId,
+  fetchContentTitle,
 } from '@/lib/services/dora-world';
 import { ArticleContent } from '@/components/article/article-content';
 import { triggerContentTranslationAction } from '@/lib/actions/translate';
 import { after } from 'next/server';
 import { BackToList } from '@/components/navigation/back-to-list';
+import type { Metadata } from 'next';
+import { getGT } from 'gt-next/server';
+import { extractDescriptionFromMarkdown } from '@/lib/utils/content-helpers';
 
 interface PageProps {
   params: Promise<{
     locale: string;
     contentId: string;
   }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const t = await getGT();
+  const { contentId, locale } = await params;
+
+  const title = await fetchContentTitle({
+    contentId: Number(contentId),
+    locale,
+  });
+
+  const nextBuildId = await fetchBuildId();
+  const { markdown } = await getContentWithFallback({
+    nextBuildId,
+    contentId: Number(contentId),
+    locale,
+  });
+
+  // Extract description from markdown content
+  const description = extractDescriptionFromMarkdown(markdown);
+  const metaTitle = t('{title} — Doraemon Channel', { title });
+
+  return {
+    title: metaTitle,
+    description,
+    openGraph: {
+      title: metaTitle,
+      description,
+    },
+  };
 }
 
 export default async function ArticleDetailPage({ params }: PageProps) {

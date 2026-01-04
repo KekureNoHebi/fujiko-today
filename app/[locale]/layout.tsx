@@ -8,6 +8,7 @@ import {
 } from 'next/font/google';
 import '@/app/globals.css';
 import { GTProvider } from 'gt-next';
+import { getGT } from 'gt-next/server';
 import { Toaster } from 'sonner';
 import Link from 'next/link';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -43,13 +44,21 @@ const notoSansJP = Noto_Sans_JP({
   weight: ['400', '500', '700'],
 });
 
-export const metadata: Metadata = {
-  title: 'Fujiko Today',
-  description: 'Fujiko Today',
-  appleWebApp: {
-    title: 'Fujiko Today',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getGT();
+  const metaTitle = t('Fujiko Today');
+  const metaDescription = t(
+    'Get the latest news about Fujiko・F・Fujio, the legendary manga artist behind Doraemon, and his works.',
+  );
+
+  return {
+    title: metaTitle,
+    description: metaDescription,
+    appleWebApp: {
+      title: metaTitle,
+    },
+  };
+}
 
 export default async function RootLayout({
   children,

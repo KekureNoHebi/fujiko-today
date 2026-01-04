@@ -8,6 +8,8 @@ import { Pagination } from '@/components/navigation/pagination';
 import { T } from 'gt-next';
 import { checkAuth } from '@/lib/auth';
 import { PaginatedContentsResponse } from '@/lib/types/content';
+import type { Metadata } from 'next';
+import { getGT } from 'gt-next/server';
 
 interface PageProps {
   params: Promise<{
@@ -18,6 +20,28 @@ interface PageProps {
     t?: string;
     page?: string;
   }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const t = await getGT();
+  const { topic } = await params;
+  const topicTitle = topic.charAt(0).toUpperCase() + topic.slice(1);
+
+  const metaTitle = t('Doraemon Channel — {topic}', { topic: topicTitle });
+  const metaDescription = t(
+    'Explore the latest news from the Doraemon Channel.',
+  );
+
+  return {
+    title: metaTitle,
+    description: metaDescription,
+    openGraph: {
+      title: metaTitle,
+      description: metaDescription,
+    },
+  };
 }
 
 export default async function DoraWorldListPage({

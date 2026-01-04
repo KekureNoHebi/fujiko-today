@@ -111,3 +111,36 @@ export function createTurndownService(baseUrl: string): TurndownService {
   });
   return turndownService;
 }
+
+export function extractDescriptionFromMarkdown(
+  markdown: string,
+  maxLength: number = 160,
+): string {
+  let text = markdown.replace(/^#\s+.+$/m, '');
+
+  text = text
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/[*_~`]/g, '')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^[-*+]\s+/gm, '')
+    .replace(/^\d+\.\s+/gm, '')
+    .trim();
+
+  const paragraphs = text.split('\n\n');
+  let description = paragraphs[0] || text;
+
+  if (description.length > maxLength) {
+    const truncated = description.substring(0, maxLength);
+    const lastPeriod = Math.max(
+      truncated.lastIndexOf('。'),
+      truncated.lastIndexOf('. '),
+    );
+    description =
+      lastPeriod > 0
+        ? truncated.substring(0, lastPeriod + 1)
+        : truncated + '...';
+  }
+
+  return description || 'Read this article for more information.';
+}

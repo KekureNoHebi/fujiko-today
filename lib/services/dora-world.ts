@@ -65,6 +65,40 @@ export async function fetchContentDetail(
   return await response.json();
 }
 
+export async function fetchContentTitle({
+  contentId,
+}: {
+  contentId: number;
+  locale: string;
+}): Promise<string> {
+  const response = await client.GET('/items/dora_world_contents/{id}', {
+    params: {
+      path: {
+        id: contentId.toString(),
+      },
+      query: {
+        fields: ['translations.*'],
+      },
+    },
+  });
+
+  if (!response.data?.data) {
+    return 'Article';
+  }
+
+  const item = response.data.data;
+  const translation = findTranslationByLanguage(item.translations, 'ja');
+
+  const title =
+    typeof translation === 'object' &&
+    translation !== null &&
+    'title' in translation
+      ? (translation.title as string) || ''
+      : '';
+
+  return title || 'Article';
+}
+
 export async function fetchContentsFromDirectus({
   locale,
   page = 1,

@@ -55,6 +55,40 @@ interface WordPressPostsResponse {
   totalPages: number;
 }
 
+export async function fetchPostTitle({
+  postId,
+}: {
+  postId: number;
+  locale: string;
+}): Promise<string> {
+  const response = await client.GET('/items/fujiko_museum_contents/{id}', {
+    params: {
+      path: {
+        id: postId.toString(),
+      },
+      query: {
+        fields: ['translations.*'],
+      },
+    },
+  });
+
+  if (!response.data?.data) {
+    return 'Blog Post';
+  }
+
+  const item = response.data.data;
+  const translation = findTranslationByLanguage(item.translations, 'ja');
+
+  const title =
+    typeof translation === 'object' &&
+    translation !== null &&
+    'title' in translation
+      ? (translation.title as string) || ''
+      : '';
+
+  return title || 'Blog Post';
+}
+
 export async function fetchPostsFromDirectus({
   locale,
   page = 1,
