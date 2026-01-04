@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import type { LanguageCode } from '@/lib/types/term';
+// import type { LanguageCode } from '@/lib/types/term';
 import type { PaginatedContentsResponse } from '@/lib/types/content';
 import { fetchDirectusTerms } from '@/lib/services/directus-terms';
 import { TriggerContentTranslationParams } from '@/lib/schemas/translate-content';
@@ -257,16 +257,16 @@ export async function getContentWithFallback({
       markdown = await getContent({ nextBuildId, contentId });
     }
 
-    translationRequests.push({
-      text: markdown,
-      targetLanguage: locale as LanguageCode,
-      sourceLanguage: 'ja',
-      uploadPath: `${basePath}/${locale}/content.md`,
-      uploadSourcePath: `${basePath}/ja/content.md`,
-      revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
-      idempotencyKey: `dora-world-${contentId}-${locale}`,
-      idempotencyKeyTTL: '5m',
-    });
+    // translationRequests.push({
+    //   text: markdown,
+    //   targetLanguage: locale as LanguageCode,
+    //   sourceLanguage: 'ja',
+    //   uploadPath: `${basePath}/${locale}/content.md`,
+    //   uploadSourcePath: `${basePath}/ja/content.md`,
+    //   revalidatePath: `/${locale}/dora-world/contents/${contentId}`,
+    //   idempotencyKey: `dora-world-${contentId}-${locale}`,
+    //   idempotencyKeyTTL: '5m',
+    // });
   }
 
   return {

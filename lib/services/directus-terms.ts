@@ -35,6 +35,7 @@ export async function fetchDirectusTerms(
           }),
         },
       },
+      next: { revalidate: 300 },
     });
   };
 
@@ -103,6 +104,7 @@ export async function fetchAllTermsWithAllLanguages(): Promise<
           fields: ['id', 'translations.*'],
         },
       },
+      next: { revalidate: 300 },
     });
   };
 

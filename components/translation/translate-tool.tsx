@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Sparkles, Copy } from 'lucide-react';
+import { Loader2, UtensilsCrossed, Copy, ArrowLeftRight } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Select,
@@ -31,6 +32,7 @@ import {
   replacePlaceholders,
 } from '@/lib/utils/content-helpers';
 import { generateTranslationPrompt } from '@/lib/utils/translation-prompt';
+import { useGT, T } from 'gt-next';
 const availableLanguages = Object.keys(languageLabels) as LanguageCode[];
 
 interface TranslateToolProps {
@@ -38,6 +40,7 @@ interface TranslateToolProps {
 }
 
 export function TranslateTool({ locale }: TranslateToolProps) {
+  const t = useGT();
   const [text, setText] = useState('');
   const [translation, setTranslation] = useState('');
   const [thinkingContent, setThinkingContent] = useState('');
@@ -49,9 +52,15 @@ export function TranslateTool({ locale }: TranslateToolProps) {
   const [streaming, setStreaming] = useState(false);
   const [enableThinking, setEnableThinking] = useState(false);
 
+  const swapLanguages = () => {
+    const temp = sourceLanguage;
+    setSourceLanguage(targetLanguage);
+    setTargetLanguage(temp);
+  };
+
   const translateWithStream = async () => {
     if (!text.trim()) {
-      toast.error('Please enter text to translate');
+      toast.error(t('Please enter text to translate'));
       return;
     }
 
@@ -87,7 +96,7 @@ export function TranslateTool({ locale }: TranslateToolProps) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Translation failed');
+        throw new Error(error.error);
       }
 
       const reader = response.body?.getReader();
@@ -138,7 +147,9 @@ export function TranslateTool({ locale }: TranslateToolProps) {
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Translation failed',
+        error instanceof Error
+          ? error.message
+          : t('Oops, the Translation Gummy seems to have gone bad...'),
       );
       console.error('Translation error:', error);
     } finally {
@@ -148,15 +159,15 @@ export function TranslateTool({ locale }: TranslateToolProps) {
 
   const copyTranslation = async () => {
     if (!translation) {
-      toast.error('No translation to copy');
+      toast.error(t('No translation to copy'));
       return;
     }
 
     try {
       await navigator.clipboard.writeText(translation);
-      toast.success('Translation copied to clipboard!');
+      toast.success(t('Translation copied to clipboard!'));
     } catch (error) {
-      toast.error('Failed to copy translation');
+      toast.error(t('Failed to copy translation'));
       console.error('Copy error:', error);
     }
   };
@@ -165,52 +176,57 @@ export function TranslateTool({ locale }: TranslateToolProps) {
     <div className="h-[calc(100dvh-6rem)] sm:h-[calc(100dvh-7rem)] md:h-[calc(100dvh-8rem)] max-w-7xl mx-auto">
       <Conversation className="h-full">
         <ConversationContent className="gap-4">
-          <div className="grid grid-cols-2 gap-4 max-w-md">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">From</label>
-              <Select
-                value={sourceLanguage}
-                onValueChange={(value) =>
-                  setSourceLanguage(value as LanguageCode)
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableLanguages.map((lang) => (
-                    <SelectItem key={lang} value={lang}>
-                      {languageLabels[lang]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">To</label>
-              <Select
-                value={targetLanguage}
-                onValueChange={(value) =>
-                  setTargetLanguage(value as LanguageCode)
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableLanguages.map((lang) => (
-                    <SelectItem key={lang} value={lang}>
-                      {languageLabels[lang]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 max-w-md">
+            <Select
+              value={sourceLanguage}
+              onValueChange={(value) =>
+                setSourceLanguage(value as LanguageCode)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {availableLanguages.map((lang) => (
+                  <SelectItem key={lang} value={lang}>
+                    {languageLabels[lang]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={swapLanguages}
+              className="shrink-0"
+              aria-label="Swap languages"
+            >
+              <ArrowLeftRight className="h-4 w-4" />
+            </Button>
+
+            <Select
+              value={targetLanguage}
+              onValueChange={(value) =>
+                setTargetLanguage(value as LanguageCode)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {availableLanguages.map((lang) => (
+                  <SelectItem key={lang} value={lang}>
+                    {languageLabels[lang]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-3">
             <Textarea
-              placeholder="Enter text to translate..."
+              placeholder={t('Enter text to translate...')}
               value={text}
               onChange={(e) => setText(e.target.value)}
               className="min-h-[120px] resize-none"
@@ -228,54 +244,37 @@ export function TranslateTool({ locale }: TranslateToolProps) {
                 htmlFor="enable-thinking"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
-                Enable thinking mode (uses reasoning model)
+                <T>I want one this big! (Better translation)</T>
               </label>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <Button
-                onClick={() => {
+                onClick={async () => {
                   if (!text.trim()) {
-                    toast.error('Please enter text to translate');
+                    toast.error(t('Please enter text to translate'));
                     return;
                   }
 
                   setLoading(true);
-
-                  navigator.clipboard
-                    .write([
-                      new ClipboardItem({
-                        'text/plain': generateTranslationPrompt({
-                          sourceLanguage,
-                          targetLanguage,
-                          text,
-                        })
-                          .then(
-                            (prompt) =>
-                              new Blob([prompt], { type: 'text/plain' }),
-                          )
-                          .catch((error) => {
-                            toast.error(
-                              error instanceof Error
-                                ? error.message
-                                : 'Failed to generate prompt',
-                            );
-                            throw error;
-                          })
-                          .finally(() => {
-                            setLoading(false);
-                          }),
-                      }),
-                    ])
-                    .then(() => {
-                      toast.success('Prompt copied to clipboard!');
-                    })
-                    .catch((error) => {
-                      if (error.message !== 'Failed to generate prompt') {
-                        toast.error('Failed to copy prompt');
-                      }
-                      console.error('Copy error:', error);
+                  try {
+                    const prompt = await generateTranslationPrompt({
+                      sourceLanguage,
+                      targetLanguage,
+                      text,
                     });
+                    await navigator.clipboard.writeText(prompt);
+                    toast.success(t('Recipe copied to clipboard!'));
+                  } catch (error) {
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : t('Failed to copy recipe'),
+                    );
+                    console.error('Copy error:', error);
+                  } finally {
+                    setLoading(false);
+                  }
                 }}
                 disabled={loading || !text.trim()}
                 variant="outline"
@@ -283,12 +282,12 @@ export function TranslateTool({ locale }: TranslateToolProps) {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
+                    <T>Generating...</T>
                   </>
                 ) : (
                   <>
                     <Copy className="mr-2 h-4 w-4" />
-                    Copy Prompt
+                    <T>Copy Recipe</T>
                   </>
                 )}
               </Button>
@@ -300,17 +299,33 @@ export function TranslateTool({ locale }: TranslateToolProps) {
                 {streaming ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Translating...
+                    <T>Eating...</T>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Translate
+                    <UtensilsCrossed className="mr-2 h-4 w-4" />
+                    <T>Let&apos;s eat!</T>
                   </>
                 )}
               </Button>
             </div>
           </div>
+
+          {!translation && !thinkingContent && (
+            <div className="flex flex-col items-center gap-4 py-8">
+              <Image
+                src="/translation-gummy.png"
+                alt="Translation Gummy"
+                width={150}
+                height={150}
+              />
+              <p className="text-sm text-muted-foreground text-center">
+                <T>
+                  Enter the text you want to translate, then let&apos;s eat!
+                </T>
+              </p>
+            </div>
+          )}
 
           {thinkingContent && (
             <div className="w-full min-w-0 overflow-hidden">
@@ -336,7 +351,7 @@ export function TranslateTool({ locale }: TranslateToolProps) {
                 <div className="flex gap-2">
                   <Button onClick={copyTranslation} variant="outline" size="sm">
                     <Copy className="mr-2 h-3.5 w-3.5" />
-                    Copy Translation
+                    <T>Copy Translation</T>
                   </Button>
                 </div>
               )}

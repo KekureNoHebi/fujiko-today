@@ -47,7 +47,10 @@ export async function fetchFile({
   }
 
   try {
-    const response = await fetch(url, { headers });
+    const response = await fetch(url, {
+      headers,
+      next: { revalidate: 3600 },
+    });
 
     if (response.status === 404) {
       return {

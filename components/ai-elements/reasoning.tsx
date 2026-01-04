@@ -129,12 +129,12 @@ export type ReasoningTriggerProps = ComponentProps<
 
 const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => {
   if (isStreaming || duration === 0) {
-    return <Shimmer duration={1}>Thinking...</Shimmer>;
+    return <Shimmer duration={1}>Munching...</Shimmer>;
   }
   if (duration === undefined) {
-    return <p>Thought for a few seconds</p>;
+    return <p>Munched for a bit</p>;
   }
-  return <p>Thought for {duration} seconds</p>;
+  return <p>Munched for {duration} seconds</p>;
 };
 
 export const ReasoningTrigger = memo(
@@ -156,7 +156,7 @@ export const ReasoningTrigger = memo(
       >
         {children ?? (
           <>
-            <BrainIcon className="size-4" />
+            <span className="text-base">😋</span>
             {getThinkingMessage(isStreaming, duration)}
             <ChevronDownIcon
               className={cn(
