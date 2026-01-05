@@ -1,4 +1,8 @@
-import { getContent, fetchBuildId } from '@/lib/services/dora-world';
+import {
+  getContent,
+  fetchBuildId,
+  fetchContentMetadata,
+} from '@/lib/services/dora-world';
 import ReactMarkdown from 'react-markdown';
 import { TermAnalyzer } from '@/components/term/term-analyzer';
 import remarkBreaks from 'remark-breaks';
@@ -6,12 +10,39 @@ import { BackToList } from '@/components/navigation/back-to-list';
 import { markdownComponents } from '@/lib/markdown-components';
 import { TranslationComparison } from '@/components/translation/translation-comparison';
 import { LanguageCode } from '@/lib/types/term';
+import type { Metadata } from 'next';
+import { generatePageMetadata } from '@/lib/utils/metadata';
 
 interface PageProps {
   params: Promise<{
     locale: string;
     contentId: string;
   }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { contentId, locale } = await params;
+
+  const metadata = await fetchContentMetadata({
+    contentId: Number(contentId),
+    locale,
+  });
+
+  return {
+    ...generatePageMetadata({
+      title: metadata.title,
+      description: metadata.title,
+      locale,
+      path: `/dora-world/contents/${contentId}/analyze`,
+      type: 'article',
+    }),
+    robots: {
+      index: false,
+      follow: false,
+    },
+  };
 }
 
 export default async function ArticleAnalyzePage({ params }: PageProps) {

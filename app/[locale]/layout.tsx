@@ -44,18 +44,46 @@ const notoSansJP = Noto_Sans_JP({
   weight: ['400', '500', '700'],
 });
 
-export async function generateMetadata(): Promise<Metadata> {
+interface LayoutProps {
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: LayoutProps): Promise<Metadata> {
   const t = await getGT();
-  const metaTitle = t('Fujiko Today');
-  const metaDescription = t(
+  const { locale } = await params;
+  const siteTitle = t('Fujiko Today');
+  const siteDescription = t(
     'Get the latest news about Fujiko・F・Fujio, the legendary manga artist behind Doraemon, and his works.',
   );
 
+  const appUrl = process.env.APP_URL || 'http://localhost:3000';
+
+  const { fetchDirectusTerms } = await import('@/lib/services/directus-terms');
+  const terms = await fetchDirectusTerms(locale);
+  const keywords = [
+    ...(terms.work?.map((t) => t.name) || []),
+    ...(terms.person?.map((t) => t.name) || []),
+  ]
+    .filter(Boolean)
+    .join(', ');
+
   return {
-    title: metaTitle,
-    description: metaDescription,
+    metadataBase: new URL(appUrl),
+    title: {
+      template: `%s | ${siteTitle}`,
+      default: siteTitle,
+    },
+    description: siteDescription,
+    keywords,
     appleWebApp: {
-      title: metaTitle,
+      title: siteTitle,
+    },
+    robots: {
+      index: true,
+      follow: true,
     },
   };
 }
@@ -63,10 +91,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({
   children,
   params,
-}: Readonly<{
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-}>) {
+}: Readonly<LayoutProps>) {
   const { locale } = await params;
   return (
     <html

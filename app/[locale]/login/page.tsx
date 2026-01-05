@@ -1,6 +1,9 @@
 import { checkAuth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { LoginFormWrapper } from '@/components/auth/login-form-wrapper';
+import type { Metadata } from 'next';
+import { getGT } from 'gt-next/server';
+import { generatePageMetadata } from '@/lib/utils/metadata';
 
 interface PageProps {
   params: Promise<{
@@ -9,6 +12,23 @@ interface PageProps {
   searchParams: Promise<{
     redirect?: string;
   }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const t = await getGT();
+  const { locale } = await params;
+
+  const metaTitle = t('Login');
+
+  return generatePageMetadata({
+    title: metaTitle,
+    description: metaTitle,
+    locale,
+    path: '/login',
+    type: 'website',
+  });
 }
 
 export default async function LoginPage({ params, searchParams }: PageProps) {

@@ -8,23 +8,7 @@ import { T } from 'gt-next';
 import { checkAuth } from '@/lib/auth';
 import type { Metadata } from 'next';
 import { getGT } from 'gt-next/server';
-
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getGT();
-  const metaTitle = t('Kawasaki City Fujiko・F・Fujio Museum — Latest Updates');
-  const metaDescription = t(
-    'Explore the latest updates, news, and blog posts from the Kawasaki City Fujiko・F・Fujio Museum.',
-  );
-
-  return {
-    title: metaTitle,
-    description: metaDescription,
-    openGraph: {
-      title: metaTitle,
-      description: metaDescription,
-    },
-  };
-}
+import { generatePageMetadata } from '@/lib/utils/metadata';
 
 interface PageProps {
   params: Promise<{
@@ -33,6 +17,26 @@ interface PageProps {
   searchParams: Promise<{
     page?: string;
   }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const t = await getGT();
+  const { locale } = await params;
+
+  const metaTitle = t('Kawasaki City Fujiko・F・Fujio Museum');
+  const metaDescription = t(
+    'Explore the latest updates, news, and blog posts from the Kawasaki City Fujiko・F・Fujio Museum.',
+  );
+
+  return generatePageMetadata({
+    title: metaTitle,
+    description: metaDescription,
+    locale,
+    path: '/fujiko-museum/blog',
+    type: 'website',
+  });
 }
 
 export default async function FujikoMuseumListPage({

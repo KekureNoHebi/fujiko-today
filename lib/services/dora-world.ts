@@ -65,25 +65,35 @@ export async function fetchContentDetail(
   return await response.json();
 }
 
-export async function fetchContentTitle({
+export async function fetchContentMetadata({
   contentId,
 }: {
   contentId: number;
   locale: string;
-}): Promise<string> {
+}): Promise<{
+  title: string;
+  imageUrl?: string;
+  datePublished?: string;
+  dateUpdated?: string;
+}> {
   const response = await client.GET('/items/dora_world_contents/{id}', {
     params: {
       path: {
         id: contentId.toString(),
       },
       query: {
-        fields: ['translations.*'],
+        fields: [
+          'translations.*',
+          'image_url',
+          'date_published',
+          'date_updated',
+        ],
       },
     },
   });
 
   if (!response.data?.data) {
-    return 'Article';
+    return { title: 'Article' };
   }
 
   const item = response.data.data;
@@ -96,7 +106,12 @@ export async function fetchContentTitle({
       ? (translation.title as string) || ''
       : '';
 
-  return title || 'Article';
+  return {
+    title: title || 'Article',
+    imageUrl: item.image_url || undefined,
+    datePublished: item.date_published || undefined,
+    dateUpdated: item.date_updated || undefined,
+  };
 }
 
 export async function fetchContentsFromDirectus({

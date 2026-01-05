@@ -3,22 +3,30 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import type { Metadata } from 'next';
 import { getGT } from 'gt-next/server';
+import { generatePageMetadata } from '@/lib/utils/metadata';
 
-export async function generateMetadata(): Promise<Metadata> {
+interface PageProps {
+  params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const t = await getGT();
+  const { locale } = await params;
+
   const metaTitle = t('Fujiko Today');
   const metaDescription = t(
     'Get the latest news about Fujiko・F・Fujio, the legendary manga artist behind Doraemon, and his works.',
   );
 
-  return {
+  return generatePageMetadata({
     title: metaTitle,
     description: metaDescription,
-    openGraph: {
-      title: metaTitle,
-      description: metaDescription,
-    },
-  };
+    locale,
+    path: '/',
+    type: 'website',
+  });
 }
 
 export default function Home() {

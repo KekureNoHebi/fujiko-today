@@ -1,7 +1,7 @@
 import {
   getContentWithFallback,
   fetchBuildId,
-  fetchContentTitle,
+  fetchContentMetadata,
 } from '@/lib/services/dora-world';
 import { ArticleContent } from '@/components/article/article-content';
 import { triggerContentTranslationAction } from '@/lib/actions/translate';
@@ -10,6 +10,7 @@ import { BackToList } from '@/components/navigation/back-to-list';
 import type { Metadata } from 'next';
 import { getGT } from 'gt-next/server';
 import { extractDescriptionFromMarkdown } from '@/lib/utils/content-helpers';
+import { generatePageMetadata, getDefaultOGImage } from '@/lib/utils/metadata';
 
 interface PageProps {
   params: Promise<{
@@ -24,7 +25,7 @@ export async function generateMetadata({
   const t = await getGT();
   const { contentId, locale } = await params;
 
-  const title = await fetchContentTitle({
+  const metadata = await fetchContentMetadata({
     contentId: Number(contentId),
     locale,
   });
@@ -36,18 +37,22 @@ export async function generateMetadata({
     locale,
   });
 
-  // Extract description from markdown content
   const description = extractDescriptionFromMarkdown(markdown);
-  const metaTitle = t('{title} — Doraemon Channel', { title });
+  const metaTitle = t('{title} - Doraemon Channel', {
+    title: metadata.title,
+  });
 
-  return {
+  return generatePageMetadata({
     title: metaTitle,
     description,
-    openGraph: {
-      title: metaTitle,
-      description,
-    },
-  };
+    locale,
+    path: `/dora-world/contents/${contentId}`,
+    type: 'article',
+    image: metadata.imageUrl || getDefaultOGImage(),
+    publishedTime: metadata.datePublished,
+    modifiedTime: metadata.dateUpdated,
+    authors: ['Doraemon Channel'],
+  });
 }
 
 export default async function ArticleDetailPage({ params }: PageProps) {

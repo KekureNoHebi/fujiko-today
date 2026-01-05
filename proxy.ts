@@ -47,7 +47,7 @@ export default async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|static|.*\\..*|_next).*)', // i18n routes
+    '/((?!api|static|.*\\..*|_next|og-image).*)', // i18n routes
     '/api/models', // authenticated API routes
     '/api/translate-multiple', // authenticated API routes
     '/api/translate-stream', // authenticated API routes

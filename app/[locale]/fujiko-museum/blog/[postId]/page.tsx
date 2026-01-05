@@ -1,6 +1,6 @@
 import {
   getPostWithFallback,
-  fetchPostTitle,
+  fetchPostMetadata,
 } from '@/lib/services/fujiko-museum';
 import { ArticleContent } from '@/components/article/article-content';
 import { triggerContentTranslationAction } from '@/lib/actions/translate';
@@ -9,6 +9,7 @@ import { BackToList } from '@/components/navigation/back-to-list';
 import type { Metadata } from 'next';
 import { getGT } from 'gt-next/server';
 import { extractDescriptionFromMarkdown } from '@/lib/utils/content-helpers';
+import { generatePageMetadata, getDefaultOGImage } from '@/lib/utils/metadata';
 
 interface PageProps {
   params: Promise<{
@@ -23,7 +24,7 @@ export async function generateMetadata({
   const t = await getGT();
   const { postId, locale } = await params;
 
-  const title = await fetchPostTitle({
+  const metadata = await fetchPostMetadata({
     postId: Number(postId),
     locale,
   });
@@ -33,18 +34,22 @@ export async function generateMetadata({
     locale,
   });
 
-  // Extract description from markdown content
   const description = extractDescriptionFromMarkdown(markdown);
-  const metaTitle = t('{title} — Fujiko・F・Fujio Museum', { title });
+  const metaTitle = t('{title} - Kawasaki City Fujiko・F・Fujio Museum', {
+    title: metadata.title,
+  });
 
-  return {
+  return generatePageMetadata({
     title: metaTitle,
     description,
-    openGraph: {
-      title: metaTitle,
-      description,
-    },
-  };
+    locale,
+    path: `/fujiko-museum/blog/${postId}`,
+    type: 'article',
+    image: metadata.thumbnail || getDefaultOGImage(),
+    publishedTime: metadata.datePublished,
+    modifiedTime: metadata.dateUpdated,
+    authors: ['Kawasaki City Fujiko・F・Fujio Museum'],
+  });
 }
 
 export default async function PostDetailPage({ params }: PageProps) {

@@ -1,4 +1,4 @@
-import { getPost } from '@/lib/services/fujiko-museum';
+import { getPost, fetchPostMetadata } from '@/lib/services/fujiko-museum';
 import { BackToList } from '@/components/navigation/back-to-list';
 import { TermAnalyzer } from '@/components/term/term-analyzer';
 import ReactMarkdown from 'react-markdown';
@@ -6,12 +6,39 @@ import { markdownComponents } from '@/lib/markdown-components';
 import remarkBreaks from 'remark-breaks';
 import { TranslationComparison } from '@/components/translation/translation-comparison';
 import { LanguageCode } from '@/lib/types/term';
+import type { Metadata } from 'next';
+import { generatePageMetadata } from '@/lib/utils/metadata';
 
 interface PageProps {
   params: Promise<{
     locale: string;
     postId: string;
   }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { postId, locale } = await params;
+
+  const metadata = await fetchPostMetadata({
+    postId: Number(postId),
+    locale,
+  });
+
+  return {
+    ...generatePageMetadata({
+      title: metadata.title,
+      description: metadata.title,
+      locale,
+      path: `/fujiko-museum/blog/${postId}/analyze`,
+      type: 'article',
+    }),
+    robots: {
+      index: false,
+      follow: false,
+    },
+  };
 }
 
 export default async function PostDetailPage({ params }: PageProps) {
