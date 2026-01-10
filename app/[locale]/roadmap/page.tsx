@@ -100,7 +100,7 @@ async function getRoadmapItems(): Promise<RoadmapItem[]> {
       created_at,
       updated_at
     FROM roadmap_items
-    ORDER BY vote_count DESC, created_at DESC
+    ORDER BY vote_count DESC, created_at ASC
   `) as RoadmapItem[];
 
   return items;

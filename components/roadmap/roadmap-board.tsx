@@ -109,7 +109,7 @@ export function RoadmapBoard({
           <div key={status} className="flex flex-col">
             {/* Column Header */}
             <div
-              className={`rounded-lg border-2 ${config.borderColor} ${config.bgColor} p-4 mb-4 sticky top-0 z-10 backdrop-blur-sm`}
+              className={`rounded-lg border-2 ${config.borderColor} ${config.bgColor} p-4 mb-4 sticky top-18 z-10 backdrop-blur-md bg-opacity-95 dark:bg-opacity-95 shadow-sm`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

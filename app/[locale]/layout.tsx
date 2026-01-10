@@ -103,7 +103,7 @@ export default async function RootLayout({
           <SidebarProvider>
             <AppSidebar />
             <div className="flex flex-1 flex-col">
-              <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-6">
+              <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-background px-6">
                 <div className="flex items-center gap-4">
                   <SidebarTrigger />
                   <Link href="/" className="text-xl font-semibold">

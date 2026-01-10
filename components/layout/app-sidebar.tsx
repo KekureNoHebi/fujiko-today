@@ -15,6 +15,7 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { T } from 'gt-next';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
@@ -97,7 +98,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <Map className="w-6 h-6 shrink-0" />
                 <span className="font-medium whitespace-normal! overflow-visible! text-clip!">
-                  Roadmap
+                  <T>Roadmap</T>
                 </span>
               </Link>
             </SidebarMenuButton>
