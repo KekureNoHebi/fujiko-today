@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Map } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -11,6 +12,7 @@ import {
   SidebarMenuButton,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
 
@@ -75,6 +77,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip="Roadmap"
+              size="lg"
+              isActive={pathname?.includes('/roadmap')}
+            >
+              <Link
+                href="/roadmap"
+                className="flex items-center gap-2"
+                onClick={() => {
+                  if (isMobile) {
+                    setOpenMobile(false);
+                  }
+                }}
+              >
+                <Map className="w-6 h-6 shrink-0" />
+                <span className="font-medium whitespace-normal! overflow-visible! text-clip!">
+                  Roadmap
+                </span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

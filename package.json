@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -61,8 +62,9 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "format": "eslint --fix . && prettier --write .",
+    "generate-types": "./scripts/generate-types.sh",
     "lint": "eslint",
     "openapi": "./scripts/fetch-directus-schema.sh && openapi-typescript ./lib/api/schema.json --output ./lib/api/v1.d.ts",
     "prepare": "husky",
